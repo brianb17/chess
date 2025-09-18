@@ -1,5 +1,7 @@
 package chess;
 
+import chess.moves.SlidingMovesCalculator;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -57,68 +59,54 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
-        if (piece.getPieceType() == PieceType.BISHOP) {
-            return slidingMoves(board, myPosition, piece, new int[][] {
-                {1,1}, {1,-1}, {-1,1}, {-1,-1}
-            });
+
+        switch (piece.getPieceType()) {
+            case BISHOP:
+                return SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][] {
+                    {1,1}, {1,-1}, {-1,1}, {-1,-1}
+                });
+            case ROOK:
+                return SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][] {
+                        {1,0}, {-1,0}, {0,1}, {0,-1}
+                });
+            case QUEEN:
+                return SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][] {
+                        {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
+                });
+            default:
+                return List.of();
         }
-        if (piece.getPieceType() == PieceType.ROOK) {
-            return slidingMoves(board, myPosition, piece, new int[][] {
-                    {1,0}, {-1,0}, {0,1}, {0,-1}
-            });
-        }
-        if (piece.getPieceType() == PieceType.QUEEN) {
-            return slidingMoves(board, myPosition, piece, new int[][] {
-                    {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
-            });
-        }
-        if (piece.getPieceType() == PieceType.KNIGHT) {
-            return jumpMoves(board, myPosition, piece, new int[][] {
-                    {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,-2}, {2,-1}
-            });
-        }
-        if (piece.getPieceType() == PieceType.KING) {
-            return jumpMoves(board, myPosition, piece, new int[][] {
-                {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
-            });
-        }
-        if (piece.getPieceType() == PieceType.PAWN) {
-            return pawnMoves(board, myPosition, piece);
-        }
-        return List.of();
+//        if (piece.getPieceType() == PieceType.BISHOP) {
+//            return slidingMoves(board, myPosition, piece, new int[][] {
+//                {1,1}, {1,-1}, {-1,1}, {-1,-1}
+//            });
+//        }
+//        if (piece.getPieceType() == PieceType.ROOK) {
+//            return slidingMoves(board, myPosition, piece, new int[][] {
+//                    {1,0}, {-1,0}, {0,1}, {0,-1}
+//            });
+//        }
+//        if (piece.getPieceType() == PieceType.QUEEN) {
+//            return slidingMoves(board, myPosition, piece, new int[][] {
+//                    {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
+//            });
+//        }
+//        if (piece.getPieceType() == PieceType.KNIGHT) {
+//            return jumpMoves(board, myPosition, piece, new int[][] {
+//                    {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,-2}, {2,-1}
+//            });
+//        }
+//        if (piece.getPieceType() == PieceType.KING) {
+//            return jumpMoves(board, myPosition, piece, new int[][] {
+//                {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
+//            });
+//        }
+//        if (piece.getPieceType() == PieceType.PAWN) {
+//            return pawnMoves(board, myPosition, piece);
+//        }
+//        return List.of();
     }
 
-    private Collection<ChessMove> slidingMoves(
-            ChessBoard board, ChessPosition start, ChessPiece piece, int[][] directions) {
-
-        List<ChessMove> moves = new ArrayList<>();
-
-        for (int[] dir : directions) {
-            int row = start.getRow();
-            int col = start.getColumn();
-
-            while (true) {
-                row += dir[0];
-                col += dir[1];
-
-                if (row < 1 || row > 8 || col < 1 || col > 8) break;
-
-                ChessPosition newPos = new ChessPosition(row, col);
-                ChessPiece target = board.getPiece(newPos);
-
-                if (target == null) {
-                    moves.add(new ChessMove(start, newPos, null));
-                }
-                else {
-                    if (target.getTeamColor() != piece.getTeamColor()) {
-                        moves.add(new ChessMove(start, newPos, null));
-                    }
-                    break;
-                }
-            }
-        }
-        return moves;
-    }
 
     private Collection<ChessMove> jumpMoves(
             ChessBoard board, ChessPosition start, ChessPiece piece, int[][] directions) {
