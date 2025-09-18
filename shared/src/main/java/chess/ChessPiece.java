@@ -77,6 +77,11 @@ public class ChessPiece {
                     {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,-2}, {2,-1}
             });
         }
+        if (piece.getPieceType() == PieceType.KING) {
+            return jumpMoves(board, myPosition, piece, new int[][] {
+                {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
+            });
+        }
         return List.of();
     }
 
