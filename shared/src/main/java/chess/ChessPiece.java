@@ -4,7 +4,6 @@ import chess.moves.JumpMovesCalculator;
 import chess.moves.PawnMovesCalculator;
 import chess.moves.SlidingMovesCalculator;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -62,32 +61,25 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
 
-        switch (piece.getPieceType()) {
-            case BISHOP:
-                return SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][] {
-                    {1,1}, {1,-1}, {-1,1}, {-1,-1}
-                });
-            case ROOK:
-                return SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][] {
-                        {1,0}, {-1,0}, {0,1}, {0,-1}
-                });
-            case QUEEN:
-                return SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][] {
-                        {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
-                });
-            case KNIGHT:
-                return JumpMovesCalculator.calculate(board, myPosition, piece, new int[][] {
-                        {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,-2}, {2,-1}
-                });
-            case KING:
-                return JumpMovesCalculator.calculate(board, myPosition, piece, new int[][] {
-                        {1,1}, {1,-1}, {-1,1}, {-1,-1}, {1,0}, {-1,0}, {0,1}, {0,-1}
-                });
-            case PAWN:
-                return PawnMovesCalculator.calculate(board, myPosition, piece);
-            default:
-                return List.of();
-        }
+        return switch (piece.getPieceType()) {
+            case BISHOP -> SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][]{
+                    {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+            });
+            case ROOK -> SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][]{
+                    {1, 0}, {-1, 0}, {0, 1}, {0, -1}
+            });
+            case QUEEN -> SlidingMovesCalculator.calculate(board, myPosition, piece, new int[][]{
+                    {1, 1}, {1, -1}, {-1, 1}, {-1, -1}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}
+            });
+            case KNIGHT -> JumpMovesCalculator.calculate(board, myPosition, piece, new int[][]{
+                    {2, 1}, {1, 2}, {-1, 2}, {-2, 1}, {-2, -1}, {-1, -2}, {1, -2}, {2, -1}
+            });
+            case KING -> JumpMovesCalculator.calculate(board, myPosition, piece, new int[][]{
+                    {1, 1}, {1, -1}, {-1, 1}, {-1, -1}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}
+            });
+            case PAWN -> PawnMovesCalculator.calculate(board, myPosition, piece);
+            default -> List.of();
+        };
     }
 
 
