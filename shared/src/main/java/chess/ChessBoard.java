@@ -22,8 +22,29 @@ public class ChessBoard {
      * @param position where to add the piece to
      * @param piece    the piece to add
      */
+    private ChessPosition whiteKingSpot;
+    private ChessPosition blackKingSpot;
+
     public void addPiece(ChessPosition position, ChessPiece piece) {
         squares[position.getRow()-1][position.getColumn()-1] = piece;
+
+        if (piece != null && piece.getPieceType() == ChessPiece.PieceType.KING) {
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+                    whiteKingSpot = position;
+            }
+            else {
+                blackKingSpot = position;
+            }
+        }
+    }
+
+    public ChessPosition getWhiteKingSpot(ChessGame.TeamColor color) {
+        if (color == ChessGame.TeamColor.WHITE) {
+            return whiteKingSpot;
+        }
+        else {
+            return blackKingSpot;
+        }
     }
 
     /**
