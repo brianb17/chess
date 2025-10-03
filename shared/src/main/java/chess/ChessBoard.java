@@ -58,6 +58,13 @@ public class ChessBoard {
         return squares[position.getRow()-1][position.getColumn()-1];
     }
 
+    public ChessGame.TeamColor getPosTeam(ChessPosition pos) {
+        if (getPiece(pos) != null) {
+            return getPiece(pos).getTeamColor();
+        }
+        return null;
+    }
+
     public boolean isOccupied(ChessPosition position) {
         return getPiece(position) != null;
     }
