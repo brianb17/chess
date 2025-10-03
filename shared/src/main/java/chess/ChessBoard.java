@@ -47,6 +47,22 @@ public class ChessBoard {
         }
     }
 
+    public ChessBoard deepCopy() {
+        ChessBoard copyBoard = new ChessBoard();
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = this.getPiece(pos);
+
+                if (piece != null) {
+                    copyBoard.addPiece(pos, new ChessPiece(piece.getTeamColor(), piece.getPieceType()));
+                }
+            }
+        }
+        return copyBoard;
+    }
+
     /**
      * Gets a chess piece on the chessboard
      *
