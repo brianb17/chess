@@ -38,7 +38,7 @@ public class ChessBoard {
         }
     }
 
-    public ChessPosition getWhiteKingSpot(ChessGame.TeamColor color) {
+    public ChessPosition getKingSpot(ChessGame.TeamColor color) {
         if (color == ChessGame.TeamColor.WHITE) {
             return whiteKingSpot;
         }
