@@ -58,22 +58,22 @@ public class ChessGame {
         if (thisPiece == null) {
             return null;
         }
-        HashSet<ChessMove> viableMoves = (HashSet<ChessMove>) thisPiece.pieceMoves(board, startPosition);
-        HashSet<ChessMove> workingMoves = new HashSet<>();
+        Collection<ChessMove> viableMoves = thisPiece.pieceMoves(board, startPosition);
+        HashSet<ChessMove> validMoves = new HashSet<>();
         for (ChessMove move : viableMoves) {
             ChessPiece target = board.getPiece(move.getEndPosition());
 
             board.addPiece(startPosition, null);
             board.addPiece(move.getEndPosition(), thisPiece);
             if (!isInCheck(thisPiece.getTeamColor())) {
-                workingMoves.add(move);
+                validMoves.add(move);
             }
 
             board.addPiece(move.getEndPosition(), target);
             board.addPiece(startPosition, thisPiece);
         }
 
-        return workingMoves;
+        return validMoves;
     }
 
     /**
