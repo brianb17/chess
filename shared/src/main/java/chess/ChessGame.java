@@ -53,6 +53,7 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece thisPiece = board.getPiece(startPosition);
 
+
         if (thisPiece == null) {
             return null;
         }
