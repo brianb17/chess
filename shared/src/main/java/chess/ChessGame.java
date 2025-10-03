@@ -145,7 +145,7 @@ public class ChessGame {
             return false;
         }
 
-        for (int row = 1; row <=8; row++) {
+        for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
@@ -153,11 +153,31 @@ public class ChessGame {
                 if (piece != null && piece.getTeamColor() == teamColor) {
                     Collection<ChessMove> moves = validMoves(pos);
 
-                    for (ChessMove move : moves) {
-                        ChessBoard copyBoard = board.deepCopy();
+                    if (moves != null) {
+                        for (ChessMove move : moves) {
+                            ChessBoard copyBoard = board.deepCopy();
+
+                            ChessPiece movedPiece = new ChessPiece(
+                                    piece.getTeamColor(),
+                                    move.getPromotionPiece() != null ? move.getPromotionPiece() : piece.getPieceType()
+                            );
+
+                            copyBoard.addPiece(move.getStartPosition(), null);
+                            copyBoard.addPiece(move.getEndPosition(), movedPiece);
+
+                            ChessGame copyGame = new ChessGame();
+                            copyGame.setBoard(copyBoard);
+
+                            if (!copyGame.isInCheck(teamColor)) {
+                                return false;
+                            }
+                        }
                     }
                 }
+            }
         }
+
+        return true;
     }
 
 
