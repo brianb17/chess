@@ -82,6 +82,10 @@ public class ChessPiece {
         };
     }
 
+    public String toString() {
+        return pieceColor + " " + type;
+    }
+
 
     @Override
     public boolean equals(Object o) {

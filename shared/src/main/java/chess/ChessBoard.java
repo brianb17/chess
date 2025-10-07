@@ -13,7 +13,7 @@ public class ChessBoard {
 
     ChessPiece[][] squares = new ChessPiece[8][8];
     public ChessBoard() {
-        
+
     }
 
     /**
@@ -123,12 +123,34 @@ public class ChessBoard {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+    public String toString() {
+        StringBuilder sb = new StringBuilder("ChessBoard{\n");
+        for (int row = 0; row < squares.length; row++) {
+            sb.append("[");
+            for (int col = 0; col < squares[row].length; col++) {
+                ChessPiece piece = squares[row][col];
+                sb.append(piece == null ? " ." : " " + piece);
+            }
+            sb.append(" ]\n");
         }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         ChessBoard that = (ChessBoard) o;
-        return Objects.deepEquals(squares, that.squares);
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece p1 = this.squares[row][col];
+                ChessPiece p2 = that.squares[row][col];
+                if (!Objects.equals(p1, p2)) return false;
+            }
+        }
+        return true;
     }
 
     @Override
