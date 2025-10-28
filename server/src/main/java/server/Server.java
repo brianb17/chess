@@ -32,7 +32,11 @@ public class Server {
             var authData = userService.register(user);
 
             ctx.result(serializer.toJson(authData));
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException ex) {
+            var msg = String.format("{\"message\": \"Error: %s\"}", ex.getMessage());
+            ctx.status(400).result(msg);
+        }
+        catch (Exception ex) {
             var msg = String.format("{\"message\": \"Error: %s\"}", ex.getMessage());
             ctx.status(403).result(msg);
         }
