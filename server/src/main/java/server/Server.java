@@ -34,7 +34,7 @@ public class Server {
             ctx.result(serializer.toJson(authData));
         } catch (Exception ex) {
             var msg = String.format("{\"message\": \"Error: %s\"}", ex.getMessage());
-            ctx.status(403).result();
+            ctx.status(403).result(msg);
         }
     }
 
