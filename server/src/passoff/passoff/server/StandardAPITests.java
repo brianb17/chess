@@ -405,7 +405,7 @@ public class StandardAPITests {
         serverFacade.createGame(new TestCreateRequest("Awesome game"), existingAuth);
 
         //log in new user
-        TestUser user = new TestUser("ClearMe", "cleared", "clear@mail.com");
+        TestUser user = new TestUser("ClearMe", "cleared", "clearApp@mail.com");
         TestAuthResult registerResult = serverFacade.register(user);
 
         //create and join game for new user
@@ -415,10 +415,10 @@ public class StandardAPITests {
         TestJoinRequest joinRequest = new TestJoinRequest(ChessGame.TeamColor.WHITE, createResult.getGameID());
         serverFacade.joinPlayer(joinRequest, registerResult.getAuthToken());
 
-        //do clear
+        //do clearApp
         TestResult clearResult = serverFacade.clear();
 
-        //test clear successful
+        //test clearApp successful
         assertHttpOk(clearResult);
 
         //make sure neither user can log in
@@ -442,7 +442,7 @@ public class StandardAPITests {
 
         //check listResult
         Assertions.assertNotNull(listResult.getGames(), "List result did not contain an empty list of games");
-        Assertions.assertEquals(0, listResult.getGames().length, "list result did not return 0 games after clear");
+        Assertions.assertEquals(0, listResult.getGames().length, "list result did not return 0 games after clearApp");
     }
 
     @Test
@@ -450,7 +450,7 @@ public class StandardAPITests {
     @DisplayName("Multiple Clears")
     public void clearMultipleTimes() {
 
-        //clear multiple times
+        //clearApp multiple times
         serverFacade.clear();
         serverFacade.clear();
         TestResult result = serverFacade.clear();

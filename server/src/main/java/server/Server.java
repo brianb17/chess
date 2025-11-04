@@ -5,6 +5,7 @@ import dataaccess.MemoryDataAccess;
 import datamodel.UserData;
 import io.javalin.*;
 import io.javalin.http.Context;
+import service.ClearService;
 import service.UserService;
 
 public class Server {
@@ -14,6 +15,9 @@ public class Server {
 
     public Server() {
         var dataAccess = new MemoryDataAccess();
+        var clearService = new ClearService(dataAccess);
+        var clearHandler = new ClearHandler(clearService);
+
         userService = new UserService(dataAccess);
         server = Javalin.create(config -> config.staticFiles.add("web"));
 

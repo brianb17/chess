@@ -1,6 +1,8 @@
 package dataaccess;
 
 import datamodel.UserData;
+import datamodel.AuthData;
+import datamodel.GameData;
 
 import java.util.HashMap;
 import java.util.HashSet;
