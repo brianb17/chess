@@ -15,14 +15,19 @@ public class Server {
 
     public Server() {
         var dataAccess = new MemoryDataAccess();
-        var clearService = new ClearService(dataAccess);
-        var clearHandler = new ClearHandler(clearService);
 
         userService = new UserService(dataAccess);
+
+        var clearService = new ClearService(dataAccess);
+        var clearHandler = new ClearHandler(clearService);
+        var loginHandler = new LoginHandler(userService);
+
+
         server = Javalin.create(config -> config.staticFiles.add("web"));
 
         server.delete("db", ctx -> ctx.result("{}"));
         server.post("user", this::register);
+        server.post("session", loginHandler::login);
         // Register your endpoints and exception handlers here.
 
     }

@@ -32,6 +32,29 @@ public class UserService {
         return authData;
     }
 
+    public AuthData login(String username, String password) throws IllegalArgumentException {
+        if (username == null || password == null) {
+            throw new IllegalArgumentException("bad request");
+        }
+
+        UserData user = dataAccess.getUser(username);
+        if (user == null || !user.password().equals(password)) {
+            return null;
+        }
+        String token = generateAuthToken();
+        AuthData auth = new AuthData(user.username(), token);
+        dataAccess.createAuth(auth);
+        return auth;
+    }
+
+    public boolean logout(String authToken) {
+        if (authToken == null || dataAccess.getAuth(authToken) == null) {
+            return false;
+        }
+        dataAccess.deleteAuth(authToken);
+        return true;
+    }
+
     private String generateAuthToken() {
         return UUID.randomUUID().toString();
     }
