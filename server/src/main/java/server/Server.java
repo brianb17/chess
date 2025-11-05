@@ -6,6 +6,7 @@ import datamodel.UserData;
 import io.javalin.*;
 import io.javalin.http.Context;
 import service.ClearService;
+import service.GameService;
 import service.UserService;
 
 public class Server {
@@ -17,11 +18,13 @@ public class Server {
         var dataAccess = new MemoryDataAccess();
 
         userService = new UserService(dataAccess);
-
         var clearService = new ClearService(dataAccess);
+        var gameService = new GameService(dataAccess);
+
         var clearHandler = new ClearHandler(clearService);
         var loginHandler = new LoginHandler(userService);
         var logoutHandler = new LogoutHandler(userService);
+        var createGameHandler = new CreateGameHandler(gameService);
 
 
         server = Javalin.create(config -> config.staticFiles.add("web"));
@@ -30,6 +33,7 @@ public class Server {
         server.post("user", this::register);
         server.post("session", loginHandler::login);
         server.delete("session", logoutHandler::logout);
+        server.post("game", createGameHandler::createGame);
         // Register your endpoints and exception handlers here.
 
     }
