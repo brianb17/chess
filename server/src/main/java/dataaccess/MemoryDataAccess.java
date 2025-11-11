@@ -57,4 +57,13 @@ public class MemoryDataAccess implements DataAccess{
     public List<GameData> listGames() {
         return new ArrayList<>(games.values());
     }
+
+    @Override
+    public void updateGame(GameData game) throws DataAccessException{
+        int gameID = game.gameID();
+        if (!games.containsKey(gameID)) {
+            throw new DataAccessException("Game with ID " + gameID + " doesn't exist.");
+        }
+        games.put(gameID, game);
+    }
 }

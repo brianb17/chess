@@ -4,9 +4,11 @@ import dataaccess.DataAccessException;
 import datamodel.GameData;
 import datamodel.AuthData;
 import datamodel.ListGamesResult;
+import datamodel.JoinGameRequest;
 import chess.ChessGame;
 
 import javax.naming.ServiceUnavailableException;
+import javax.xml.crypto.Data;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -46,5 +48,53 @@ public class GameService {
         games = dataAccess.listGames();
 
         return new ListGamesResult(games);
+    }
+
+    public void joinGame(String authToken, JoinGameRequest request) throws DataAccessException {
+        AuthData auth = dataAccess.getAuth(authToken);
+        if (auth == null) {
+
+            throw new IllegalArgumentException("Error: unauthorized");
+        }
+
+        String color = request.playerColor();
+        if (!"WHITE".equalsIgnoreCase(color) && !"BLACK".equalsIgnoreCase(color)) {
+            throw new IllegalArgumentException("Error: bad request");
+        }
+
+        GameData game = dataAccess.getGame(request.gameID());
+        if (game == null) {
+            throw new IllegalArgumentException("Error: bad request");
+
+        }
+
+        if ("WHITE".equalsIgnoreCase(color) && game.whiteUsername() != null) {
+            throw new IllegalStateException("Error: already taken");
+        }
+
+        if ("BLACK".equalsIgnoreCase(color) && game.blackUsername() != null) {
+            throw new IllegalStateException("Error: already taken");
+        }
+
+        if ("WHITE".equalsIgnoreCase(color)) {
+            game = new GameData(
+                    game.gameID(),
+                    auth.username(),
+                    game.blackUsername(),
+                    game.gameName(),
+                    game.game()
+            );
+        }
+        else {
+            game = new GameData(
+                    game.gameID(),
+                    game.whiteUsername(),
+                    auth.username(),
+                    game.gameName(),
+                    game.game()
+            );
+        }
+
+        dataAccess.updateGame(game);
     }
 }

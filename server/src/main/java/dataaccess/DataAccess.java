@@ -2,6 +2,7 @@ package dataaccess;
 
 import datamodel.*;
 
+import javax.xml.crypto.Data;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,4 +21,6 @@ public interface DataAccess {
     HashMap<Integer, GameData> getAllGames();
 
     List<GameData> listGames();
+
+    void updateGame(GameData game) throws DataAccessException;
 }

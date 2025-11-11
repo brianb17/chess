@@ -18,6 +18,7 @@ public class Server {
 
     public Server() {
         var dataAccess = new MemoryDataAccess();
+        Gson gson = new Gson();
 
         userService = new UserService(dataAccess);
         var clearService = new ClearService(dataAccess);
@@ -28,6 +29,7 @@ public class Server {
         var logoutHandler = new LogoutHandler(userService);
         var createGameHandler = new CreateGameHandler(gameService);
         var listGamesHandler = new ListGamesHandler(gameService);
+        var joinGameHandler = new JoinGameHandler(gameService, gson);
 
 
         server = Javalin.create(config -> config.staticFiles.add("web"));
@@ -38,6 +40,7 @@ public class Server {
         server.delete("session", logoutHandler::logout);
         server.post("game", createGameHandler::createGame);
         server.get("/game", listGamesHandler::listGames);
+        server.put("/game", joinGameHandler::joinsgame);
         // Register your endpoints and exception handlers here.
 
     }
