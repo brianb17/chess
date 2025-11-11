@@ -4,8 +4,10 @@ import datamodel.UserData;
 import datamodel.AuthData;
 import datamodel.GameData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public class MemoryDataAccess implements DataAccess{
     private final HashMap<String, UserData> users = new HashMap<>();
@@ -50,5 +52,9 @@ public class MemoryDataAccess implements DataAccess{
 
     public HashMap<Integer, GameData> getAllGames() {
         return games;
+    }
+
+    public List<GameData> listGames() {
+        return new ArrayList<>(games.values());
     }
 }

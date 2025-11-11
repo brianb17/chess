@@ -1,3 +1,5 @@
+//do handler part of ListGames if needed and then the server part. The service is already done.
+
 package server;
 
 import com.google.gson.Gson;
@@ -25,6 +27,7 @@ public class Server {
         var loginHandler = new LoginHandler(userService);
         var logoutHandler = new LogoutHandler(userService);
         var createGameHandler = new CreateGameHandler(gameService);
+        var listGamesHandler = new ListGamesHandler(gameService);
 
 
         server = Javalin.create(config -> config.staticFiles.add("web"));
@@ -34,6 +37,7 @@ public class Server {
         server.post("session", loginHandler::login);
         server.delete("session", logoutHandler::logout);
         server.post("game", createGameHandler::createGame);
+        server.get("/game", listGamesHandler::listGames);
         // Register your endpoints and exception handlers here.
 
     }
