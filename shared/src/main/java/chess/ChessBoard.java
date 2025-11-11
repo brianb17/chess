@@ -74,16 +74,6 @@ public class ChessBoard {
         return squares[position.getRow()-1][position.getColumn()-1];
     }
 
-    public ChessGame.TeamColor getPosTeam(ChessPosition pos) {
-        if (getPiece(pos) != null) {
-            return getPiece(pos).getTeamColor();
-        }
-        return null;
-    }
-
-    public boolean isOccupied(ChessPosition position) {
-        return getPiece(position) != null;
-    }
 
     /**
      * Sets the board to the default starting board
@@ -125,10 +115,9 @@ public class ChessBoard {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("ChessBoard{\n");
-        for (int row = 0; row < squares.length; row++) {
+        for (ChessPiece[] square : squares) {
             sb.append("[");
-            for (int col = 0; col < squares[row].length; col++) {
-                ChessPiece piece = squares[row][col];
+            for (ChessPiece piece : square) {
                 sb.append(piece == null ? " ." : " " + piece);
             }
             sb.append(" ]\n");
@@ -139,15 +128,21 @@ public class ChessBoard {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ChessBoard that = (ChessBoard) o;
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 ChessPiece p1 = this.squares[row][col];
                 ChessPiece p2 = that.squares[row][col];
-                if (!Objects.equals(p1, p2)) return false;
+                if (!Objects.equals(p1, p2)) {
+                    return false;
+                }
             }
         }
         return true;

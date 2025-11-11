@@ -20,7 +20,9 @@ public class SlidingMovesCalculator {
                 row += dir[0];
                 col += dir[1];
 
-                if (row < 1 || row > 8 || col < 1 || col > 8) break;
+                if (row < 1 || row > 8 || col < 1 || col > 8) {
+                    break;
+                }
 
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece target = board.getPiece(newPos);
