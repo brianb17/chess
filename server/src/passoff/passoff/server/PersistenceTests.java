@@ -4,6 +4,7 @@ import dataaccess.DataAccess;
 import dataaccess.MySqlDataAccess;
 import datamodel.AuthData;
 import datamodel.UserData;
+import org.eclipse.jetty.server.Authentication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,5 +44,13 @@ public class PersistenceTests {
         dataAccess.deleteAuth("yourmom");
         var found = dataAccess.getAuth("yourmom");
         assertNull(found);
+    }
+
+    @Test
+    void createUserDuplicateUsernameFail() {
+        var user1 = new UserData("brian", "test@test.com", "password");
+        var user2 = new UserData("brian", "test2@test.com", "password2");
+        dataAccess.createUser(user1);
+        assertThrows(RuntimeException.class, () -> dataAccess.createUser(user2));
     }
 }
