@@ -2,6 +2,7 @@ package passoff.server;
 
 import dataaccess.DataAccess;
 import dataaccess.MySqlDataAccess;
+import datamodel.AuthData;
 import datamodel.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,5 +28,20 @@ public class PersistenceTests {
         assertNotNull(found);
         assertEquals("brian", found.username());
         assertEquals("b@test.com", found.email());
+    }
+
+    @Test
+    void getUserNotFoundReturnNull() {
+        var result = dataAccess.getUser("nobody");
+        assertNull(result);
+    }
+
+    @Test
+    void deleteAuthSuccess() {
+        var auth = new AuthData("brian", "yourmom");
+        dataAccess.createAuth(auth);
+        dataAccess.deleteAuth("yourmom");
+        var found = dataAccess.getAuth("yourmom");
+        assertNull(found);
     }
 }
