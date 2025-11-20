@@ -1,12 +1,18 @@
 package passoff.server;
 
+import chess.ChessGame;
 import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
 import datamodel.AuthData;
+import datamodel.GameData;
 import datamodel.UserData;
 import org.eclipse.jetty.server.Authentication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,4 +59,63 @@ public class PersistenceTests {
         dataAccess.createUser(user1);
         assertThrows(RuntimeException.class, () -> dataAccess.createUser(user2));
     }
+
+    @Test
+    void createAndGetGame() {
+        ChessGame chessGame = new ChessGame(); // assuming default constructor
+        GameData game = new GameData(1, "Alice", "Bob", "Epic Match", chessGame);
+        dataAccess.createGame(game);
+
+        GameData retrieved = dataAccess.getGame(1);
+        assertNotNull(retrieved);
+        assertEquals("Epic Match", retrieved.gameName());
+        assertEquals("Alice", retrieved.whiteUsername());
+        assertEquals("Bob", retrieved.blackUsername());
+        assertEquals(chessGame, retrieved.game());
+    }
+
+    @Test
+    void getAllGamesReturnsCorrectMap() {
+        ChessGame game1Chess = new ChessGame();
+        ChessGame game2Chess = new ChessGame();
+        GameData game1 = new GameData(1, "Alice", "Bob", "Match 1", game1Chess);
+        GameData game2 = new GameData(2, "Charlie", "Dana", "Match 2", game2Chess);
+
+        dataAccess.createGame(game1);
+        dataAccess.createGame(game2);
+
+        HashMap<Integer, GameData> allGames = dataAccess.getAllGames();
+        assertEquals(2, allGames.size());
+        assertTrue(allGames.containsKey(1));
+        assertTrue(allGames.containsKey(2));
+    }
+
+    @Test
+    void listGamesReturnsAllGames() {
+        ChessGame game1Chess = new ChessGame();
+        ChessGame game2Chess = new ChessGame();
+        GameData game1 = new GameData(1, "Alice", "Bob", "Match 1", game1Chess);
+        GameData game2 = new GameData(2, "Charlie", "Dana", "Match 2", game2Chess);
+
+        dataAccess.createGame(game1);
+        dataAccess.createGame(game2);
+
+        List<GameData> games = dataAccess.listGames();
+        assertEquals(2, games.size());
+    }
+
+    @Test
+    void updateGameSuccess() throws DataAccessException {
+        ChessGame chessGame = new ChessGame();
+        GameData game = new GameData(1, "Alice", "Bob", "Match 1", chessGame);
+        dataAccess.createGame(game);
+
+        GameData updatedGame = new GameData(1, "Alice", "Bob", "Updated Match", chessGame);
+        dataAccess.updateGame(updatedGame);
+
+        GameData retrieved = dataAccess.getGame(1);
+        assertEquals("Updated Match", retrieved.gameName());
+    }
+
+
 }

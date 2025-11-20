@@ -11,6 +11,15 @@ import service.GameService;
 
 public class MySqlDataAccess implements DataAccess {
 
+    private static final String CREATE_AUTH_TABLE = """
+        CREATE TABLE IF NOT EXISTS auth (
+            username VARCHAR(50) NOT NULL,
+            token VARCHAR(255) NOT NULL,
+            PRIMARY KEY (token),
+            FOREIGN KEY (username) REFERENCES user(username)
+        );
+        """;
+
     private static final String CREATE_USER_TABLE = """
         CREATE TABLE IF NOT EXISTS user (
             username VARCHAR(50) PRIMARY KEY,
