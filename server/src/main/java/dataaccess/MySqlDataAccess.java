@@ -2,6 +2,8 @@ package dataaccess;
 
 import java.sql.*;
 import java.util.*;
+
+import chess.ChessGame;
 import com.google.gson.Gson;
 import datamodel.AuthData;
 import datamodel.GameData;
@@ -32,34 +34,36 @@ public class MySqlDataAccess implements DataAccess {
 
     private static final String CREATE_GAME_TABLE = """
         CREATE TABLE IF NOT EXISTS game (
-            game_id INT AUTO_INCREMENT PRIMARY KEY,
-            white_player VARCHAR(50),
-            black_player VARCHAR(50),
-            state TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (white_player) REFERENCES user(username),
-            FOREIGN KEY (black_player) REFERENCES user(username)
+            gameID INT NOT NULL AUTO_INCREMENT,
+                        whiteUsername VARCHAR(255) NOT NULL,
+                        blackUsername VARCHAR(255) NOT NULL,
+                        gameName VARCHAR(255),
+                        chessGame TEXT NOT NULL,
+                        PRIMARY KEY (gameID)
         );
     """;
 
     // Optional: moves table
-    private static final String CREATE_MOVE_TABLE = """
-        CREATE TABLE IF NOT EXISTS move (
-            move_id INT AUTO_INCREMENT PRIMARY KEY,
-            game_id INT NOT NULL,
-            move_number INT NOT NULL,
-            move_data VARCHAR(10) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (game_id) REFERENCES game(game_id)
-        );
-    """;
+//    private static final String CREATE_MOVE_TABLE = """
+//        CREATE TABLE IF NOT EXISTS move (
+//            move_id INT AUTO_INCREMENT PRIMARY KEY,
+//            game_id INT NOT NULL,
+//            move_number INT NOT NULL,
+//            move_data VARCHAR(10) NOT NULL,
+//            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//            FOREIGN KEY (game_id) REFERENCES game(game_id)
+//        );
+//    """;
 
     private final Gson gson = new Gson();
 
     public MySqlDataAccess() {
-        // Initialize tables on startup
-        createTables();
+        try {
+            DatabaseManager.createDatabase(); // ensure database exists first
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Failed to create database", e);
+        }
+        createTables(); // then create tables
     }
 
     private void createTables() {
@@ -67,7 +71,7 @@ public class MySqlDataAccess implements DataAccess {
              var stmt = conn.createStatement()) {
             stmt.execute(CREATE_USER_TABLE);
             stmt.execute(CREATE_GAME_TABLE);
-            stmt.execute(CREATE_MOVE_TABLE);
+            stmt.execute(CREATE_AUTH_TABLE);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to create database tables", e);
@@ -82,7 +86,6 @@ public class MySqlDataAccess implements DataAccess {
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.createStatement()) {
 
-            stmt.executeUpdate("DELETE FROM move");
             stmt.executeUpdate("DELETE FROM game");
             stmt.executeUpdate("DELETE FROM auth");
             stmt.executeUpdate("DELETE FROM user");
@@ -143,6 +146,7 @@ public class MySqlDataAccess implements DataAccess {
 
             stmt.executeUpdate();
         } catch (SQLException | DataAccessException e) {
+            e.printStackTrace();
             throw new RuntimeException("Unable to create auth", e);
         }
     }
@@ -186,29 +190,101 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createGame(GameData game) {
+        String sql = "INSERT INTO game (whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?)";
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+            stmt.setString(1, game.whiteUsername());
+            stmt.setString(2, game.blackUsername());
+            stmt.setString(3, game.gameName());
+            stmt.setString(4, gson.toJson(game.game())); // serialize ChessGame
+
+            stmt.executeUpdate();
+
+        } catch (SQLException | DataAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to create game", e);
+        }
     }
 
 
     @Override
     public GameData getGame(int gameId) {
-        // stub: implement later
-        return null;
+        String sql = "SELECT gameID, whiteUsername, blackUsername, chessGame FROM game WHERE gameID = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, gameId);
+            try (var rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    ChessGame chessGame = gson.fromJson(rs.getString("chessGame"), ChessGame.class);
+                    return new GameData(
+                            rs.getInt("gameID"),
+                            rs.getString("whiteUsername"),
+                            rs.getString("blackUsername"),
+                            "Game " + rs.getInt("gameID"), // optional name
+                            chessGame
+                    );
+                }
+            }
+            return null;
+
+        } catch (SQLException | DataAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to get game", e);
+        }
     }
 
     @Override
     public HashMap<Integer, GameData> getAllGames() {
-        return null;
+        String sql = "SELECT gameID, whiteUsername, blackUsername, chessGame FROM game";
+        HashMap<Integer, GameData> allGames = new HashMap<>();
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql);
+             var rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                int id = rs.getInt("gameID");
+                ChessGame chessGame = gson.fromJson(rs.getString("chessGame"), ChessGame.class);
+                GameData game = new GameData(
+                        id,
+                        rs.getString("whiteUsername"),
+                        rs.getString("blackUsername"),
+                        "Game " + id,
+                        chessGame
+                );
+                allGames.put(id, game);
+            }
+
+            return allGames;
+
+        } catch (SQLException | DataAccessException e) {
+            throw new RuntimeException("Unable to get all games", e);
+        }
     }
 
     @Override
     public List<GameData> listGames() {
-        return null;
+        return new ArrayList<>(getAllGames().values());
     }
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
+        String sql = "UPDATE game SET chessGame = ?, updated_at = CURRENT_TIMESTAMP WHERE game_id = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql)) {
 
+            stmt.setString(1, gson.toJson(game.game())); // serialize ChessGame
+            stmt.setInt(2, game.gameID());
+
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated == 0) {
+                throw new DataAccessException("Game with ID " + game.gameID() + " does not exist.");
+            }
+
+        } catch (SQLException | DataAccessException e) {
+            throw new RuntimeException("Unable to update game", e);
+        }
     }
 
 }

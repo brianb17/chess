@@ -1,6 +1,7 @@
 package passoff.server;
 
 import chess.ChessGame;
+import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
@@ -62,7 +63,11 @@ public class PersistenceTests {
 
     @Test
     void createAndGetGame() {
-        ChessGame chessGame = new ChessGame(); // assuming default constructor
+        // First create users because game has foreign key to user.username
+        dataAccess.createUser(new UserData("Alice", "alice@test.com", "pass"));
+        dataAccess.createUser(new UserData("Bob", "bob@test.com", "pass"));
+
+        ChessGame chessGame = new ChessGame();
         GameData game = new GameData(1, "Alice", "Bob", "Epic Match", chessGame);
         dataAccess.createGame(game);
 
@@ -71,7 +76,10 @@ public class PersistenceTests {
         assertEquals("Epic Match", retrieved.gameName());
         assertEquals("Alice", retrieved.whiteUsername());
         assertEquals("Bob", retrieved.blackUsername());
-        assertEquals(chessGame, retrieved.game());
+
+        // Compare game states via JSON
+        Gson gson = new Gson();
+        assertEquals(gson.toJson(chessGame), gson.toJson(retrieved.game()));
     }
 
     @Test
