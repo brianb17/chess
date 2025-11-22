@@ -209,12 +209,12 @@ public class MySqlDataAccess implements DataAccess {
 
 
     @Override
-    public GameData getGame(int gameId) {
-        String sql = "SELECT gameID, whiteUsername, blackUsername, chessGame FROM game WHERE gameID = ?";
+    public GameData getGame(int gameID) {
+        String sql = "SELECT gameID, whiteUsername, blackUsername,  chessGame FROM game WHERE gameID = ?";
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, gameId);
+            stmt.setInt(1, gameID);
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     ChessGame chessGame = gson.fromJson(rs.getString("chessGame"), ChessGame.class);
@@ -222,7 +222,7 @@ public class MySqlDataAccess implements DataAccess {
                             rs.getInt("gameID"),
                             rs.getString("whiteUsername"),
                             rs.getString("blackUsername"),
-                            "Game " + rs.getInt("gameID"), // optional name
+                            rs.getString("gameName"),
                             chessGame
                     );
                 }

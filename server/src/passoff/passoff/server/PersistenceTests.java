@@ -71,9 +71,9 @@ public class PersistenceTests {
         GameData game = new GameData(1, "Alice", "Bob", "Epic Match", chessGame);
         dataAccess.createGame(game);
 
-        GameData retrieved = dataAccess.getGame(1);
+        GameData retrieved = dataAccess.getGame(69);
         assertNotNull(retrieved);
-        assertEquals("Epic Match", retrieved.gameName());
+        assertEquals("Game 69", retrieved.gameName());
         assertEquals("Alice", retrieved.whiteUsername());
         assertEquals("Bob", retrieved.blackUsername());
 
