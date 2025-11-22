@@ -149,6 +149,28 @@ public class PersistenceTests {
 
     // Game Tests
     @Test
+    void createGameSuccess() throws Exception {
+        var dataAccess = new MySqlDataAccess();
+        var game = new GameData(1, "yourmom", "yourdad", "EpicShowdown", new ChessGame());
+        dataAccess.createGame(game);
+        var returned = dataAccess.getGame(1);
+        assertNotNull(returned);
+        assertEquals("yourmom", returned.whiteUsername());
+        assertEquals("yourdad", returned.blackUsername());
+        assertEquals("EpicShowdown", returned.gameName());
+    }
+
+    @Test
+    void createGameFailDuplicateID() throws Exception {
+        var dataAccess = new MySqlDataAccess();
+        var game1 = new GameData(5, "bigchungus", "slayqueen", "BattleOne", new ChessGame());
+        var game2 = new GameData(5, "spicyboy", "coolguy", "BattleTwo", new ChessGame());
+        dataAccess.createGame(game1);
+        assertThrows(RuntimeException.class, () -> dataAccess.createGame(game2));
+    }
+
+
+    @Test
     void createAndGetGame() {
         dataAccess.createUser(new UserData("Alice", "alice@test.com", "pass"));
         dataAccess.createUser(new UserData("Bob", "bob@test.com", "pass"));
