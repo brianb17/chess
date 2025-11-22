@@ -17,18 +17,15 @@ public class MySqlDataAccess implements DataAccess {
         CREATE TABLE IF NOT EXISTS auth (
             username VARCHAR(50) NOT NULL,
             token VARCHAR(255) NOT NULL,
-            PRIMARY KEY (token),
-            FOREIGN KEY (username) REFERENCES user(username)
+            PRIMARY KEY (token)
         );
         """;
 
     private static final String CREATE_USER_TABLE = """
         CREATE TABLE IF NOT EXISTS user (
-            username VARCHAR(50) PRIMARY KEY,
+            username VARCHAR(50) NOT NULL PRIMARY KEY,
             password VARCHAR(60) NOT NULL,
-            email VARCHAR(100) NOT NULL UNIQUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            email VARCHAR(100) NOT NULL UNIQUE
         );
     """;
 
@@ -190,16 +187,19 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createGame(GameData game) {
-        String sql = "INSERT INTO game (whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?, ?)";
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setString(1, game.whiteUsername());
-            stmt.setString(2, game.blackUsername());
-            stmt.setString(3, game.gameName());
-            stmt.setString(4, gson.toJson(game.game())); // serialize ChessGame
+            stmt.setInt(1, game.gameID());
+            stmt.setString(2, game.whiteUsername());
+            stmt.setString(3, game.blackUsername());
+            stmt.setString(4, game.gameName());
+            stmt.setString(5, gson.toJson(game.game())); // serialize ChessGame
 
             stmt.executeUpdate();
+
+
 
         } catch (SQLException | DataAccessException e) {
             e.printStackTrace();
@@ -210,7 +210,7 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) {
-        String sql = "SELECT gameID, whiteUsername, blackUsername,  chessGame FROM game WHERE gameID = ?";
+        String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, chessGame FROM game WHERE gameID = ?";
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql)) {
 
@@ -270,7 +270,7 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        String sql = "UPDATE game SET chessGame = ?, updated_at = CURRENT_TIMESTAMP WHERE game_id = ?";
+        String sql = "UPDATE game SET chessGame = ? WHERE gameID = ?";
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql)) {
 

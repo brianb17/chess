@@ -1,6 +1,9 @@
 package passoff.server;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
@@ -71,9 +74,9 @@ public class PersistenceTests {
         GameData game = new GameData(1, "Alice", "Bob", "Epic Match", chessGame);
         dataAccess.createGame(game);
 
-        GameData retrieved = dataAccess.getGame(69);
+        GameData retrieved = dataAccess.getGame(1);
         assertNotNull(retrieved);
-        assertEquals("Game 69", retrieved.gameName());
+        assertEquals("Epic Match", retrieved.gameName());
         assertEquals("Alice", retrieved.whiteUsername());
         assertEquals("Bob", retrieved.blackUsername());
 
@@ -113,16 +116,27 @@ public class PersistenceTests {
     }
 
     @Test
-    void updateGameSuccess() throws DataAccessException {
+    void updateGameSuccess() throws DataAccessException, InvalidMoveException {
         ChessGame chessGame = new ChessGame();
         GameData game = new GameData(1, "Alice", "Bob", "Match 1", chessGame);
         dataAccess.createGame(game);
 
-        GameData updatedGame = new GameData(1, "Alice", "Bob", "Updated Match", chessGame);
+        ChessMove move = new ChessMove(
+                new ChessPosition(2, 5),
+                new ChessPosition(4,5),
+                null
+        );
+        chessGame.makeMove(move);
+        GameData updatedGame = new GameData(1, "Alice", "Bob", "Match 1", chessGame);
         dataAccess.updateGame(updatedGame);
 
         GameData retrieved = dataAccess.getGame(1);
-        assertEquals("Updated Match", retrieved.gameName());
+        Gson gson = new Gson();
+        assertEquals(
+                gson.toJson(chessGame),
+                gson.toJson(retrieved.game()),
+                "game updated"
+        );
     }
 
 
