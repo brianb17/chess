@@ -191,6 +191,15 @@ public class PersistenceTests {
     }
 
     @Test
+    void getGameNegativeReturnsNull() {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+
+        GameData retrieved = dao.getGame(999);
+        assertNull(retrieved);
+    }
+
+    @Test
     void getAllGamesReturnsCorrectMap() {
         ChessGame game1Chess = new ChessGame();
         ChessGame game2Chess = new ChessGame();
@@ -207,6 +216,16 @@ public class PersistenceTests {
     }
 
     @Test
+    void getAllGamesNegative() {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+
+        HashMap<Integer, GameData> allGames = dao.getAllGames();
+        assertNotNull(allGames);
+        assertTrue(allGames.isEmpty());
+    }
+
+    @Test
     void listGamesReturnsAllGames() {
         ChessGame game1Chess = new ChessGame();
         ChessGame game2Chess = new ChessGame();
@@ -218,6 +237,16 @@ public class PersistenceTests {
 
         List<GameData> games = dataAccess.listGames();
         assertEquals(2, games.size());
+    }
+
+    @Test
+    void listGamesNegative() {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+
+        List<GameData> games = dao.listGames();
+        assertNotNull(games);
+        assertTrue(games.isEmpty());
     }
 
     @Test
@@ -242,6 +271,17 @@ public class PersistenceTests {
                 gson.toJson(retrieved.game()),
                 "game updated"
         );
+    }
+
+    @Test
+    void updateGameNegative() {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+
+        ChessGame fakeGame = new ChessGame();
+        GameData game = new GameData(999, "milk", "bread", "FunnyGame", fakeGame);
+
+        assertThrows(RuntimeException.class, () -> dao.updateGame(game));
     }
 
 
