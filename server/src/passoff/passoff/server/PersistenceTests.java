@@ -284,5 +284,27 @@ public class PersistenceTests {
         assertThrows(RuntimeException.class, () -> dao.updateGame(game));
     }
 
+    @Test
+    void clearTest() {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+
+        UserData user = new UserData("milk", "password123", "milk@example.com");
+        dao.createUser(user);
+
+        AuthData auth = new AuthData("milk", "token123");
+        dao.createAuth(auth);
+
+        ChessGame chessGame = new ChessGame();
+        GameData game = new GameData(1, "milk", "bread", "FunnyGame", chessGame);
+        dao.createGame(game);
+
+        dao.clear();
+
+        assertNull(dao.getUser("milk"));
+        assertNull(dao.getAuth("token123"));
+        assertTrue(dao.getAllGames().isEmpty());
+    }
+
 
 }
