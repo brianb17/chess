@@ -178,7 +178,10 @@ public class MySqlDataAccess implements DataAccess {
              var stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, token);
-            stmt.executeUpdate();
+            int deletedRows = stmt.executeUpdate();
+            if (deletedRows == 0) {
+                throw new RuntimeException("Authtoken doesn't exist.");
+            }
 
         } catch (SQLException | DataAccessException e) {
             throw new RuntimeException("Unable to delete auth", e);

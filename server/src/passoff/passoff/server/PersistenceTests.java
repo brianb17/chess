@@ -30,6 +30,8 @@ public class PersistenceTests {
         dataAccess.clear();
     }
 
+
+    //User Tests
     @Test
     void createUserSuccess() {
         var user = new UserData("brian", "b@test.com", "password123");
@@ -71,6 +73,69 @@ public class PersistenceTests {
         assertEquals("NoButta", retrieved.password());
     }
 
+
+
+    //Auth Tests
+    @Test
+    void createAuth_positive_createsAuthSuccessfully() {
+        MySqlDataAccess dataAccess = new MySqlDataAccess();
+        dataAccess.clear();
+
+        AuthData auth = new AuthData("milk", "token123");
+        dataAccess.createAuth(auth);
+
+        AuthData retrieved = dataAccess.getAuth("token123");
+        assertNotNull(retrieved);
+        assertEquals("milk", retrieved.username());
+        assertEquals("token123", retrieved.authToken());
+    }
+
+
+    @Test
+    void createAuth_negative_duplicateToken_throwsException() {
+        MySqlDataAccess dataAccess = new MySqlDataAccess();
+        dataAccess.clear();
+
+        AuthData auth1 = new AuthData("bread", "token456");
+        dataAccess.createAuth(auth1);
+
+        AuthData auth2 = new AuthData("butter", "token456");
+
+        assertThrows(RuntimeException.class, () -> dataAccess.createAuth(auth2));
+    }
+
+    @Test
+    void getAuth_positive_returnsAuth() {
+        MySqlDataAccess dataAccess = new MySqlDataAccess();
+        dataAccess.clear();
+
+        AuthData auth = new AuthData("toast", "token789");
+        dataAccess.createAuth(auth);
+
+        AuthData retrieved = dataAccess.getAuth("token789");
+        assertNotNull(retrieved);
+        assertEquals("toast", retrieved.username());
+        assertEquals("token789", retrieved.authToken());
+    }
+
+    @Test
+    void getAuth_negative_nonexistentToken_returnsNull() {
+        MySqlDataAccess dataAccess = new MySqlDataAccess();
+        dataAccess.clear();
+
+        AuthData retrieved = dataAccess.getAuth("ghostToken");
+        assertNull(retrieved);
+    }
+
+    @Test
+    void deleteAuth_negative_nonexistentToken_throwsException() {
+        MySqlDataAccess dataAccess = new MySqlDataAccess();
+        dataAccess.clear();
+
+        assertThrows(RuntimeException.class, () -> dataAccess.deleteAuth("missingToken"));
+    }
+
+
     @Test
     void deleteAuthSuccess() {
         var auth = new AuthData("brian", "yourmom");
@@ -81,6 +146,8 @@ public class PersistenceTests {
     }
 
 
+
+    // Game Tests
     @Test
     void createAndGetGame() {
         dataAccess.createUser(new UserData("Alice", "alice@test.com", "pass"));
