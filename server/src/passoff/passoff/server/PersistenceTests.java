@@ -31,7 +31,7 @@ public class PersistenceTests {
     }
 
     @Test
-    void createUserSucess() {
+    void createUserSuccess() {
         var user = new UserData("brian", "b@test.com", "password123");
         dataAccess.createUser(user);
 
@@ -39,21 +39,6 @@ public class PersistenceTests {
         assertNotNull(found);
         assertEquals("brian", found.username());
         assertEquals("b@test.com", found.email());
-    }
-
-    @Test
-    void getUserNotFoundReturnNull() {
-        var result = dataAccess.getUser("nobody");
-        assertNull(result);
-    }
-
-    @Test
-    void deleteAuthSuccess() {
-        var auth = new AuthData("brian", "yourmom");
-        dataAccess.createAuth(auth);
-        dataAccess.deleteAuth("yourmom");
-        var found = dataAccess.getAuth("yourmom");
-        assertNull(found);
     }
 
     @Test
@@ -65,8 +50,39 @@ public class PersistenceTests {
     }
 
     @Test
+    void getUserNotFoundReturnNull() {
+        var result = dataAccess.getUser("nobody");
+        assertNull(result);
+    }
+
+    @Test
+    void getUserSuccessReturnsUser() {
+        MySqlDataAccess dataAccess = new MySqlDataAccess();
+        dataAccess.clear();
+
+        UserData user = new UserData("toastMaster", "CoolToast@toast.com", "NoButta");
+        dataAccess.createUser(user);
+
+        UserData retrieved = dataAccess.getUser("toastMaster");
+
+        assertNotNull(retrieved);
+        assertEquals("toastMaster", retrieved.username());
+        assertEquals("CoolToast@toast.com", retrieved.email());
+        assertEquals("NoButta", retrieved.password());
+    }
+
+    @Test
+    void deleteAuthSuccess() {
+        var auth = new AuthData("brian", "yourmom");
+        dataAccess.createAuth(auth);
+        dataAccess.deleteAuth("yourmom");
+        var found = dataAccess.getAuth("yourmom");
+        assertNull(found);
+    }
+
+
+    @Test
     void createAndGetGame() {
-        // First create users because game has foreign key to user.username
         dataAccess.createUser(new UserData("Alice", "alice@test.com", "pass"));
         dataAccess.createUser(new UserData("Bob", "bob@test.com", "pass"));
 
