@@ -16,11 +16,15 @@ public class LogoutHandler {
             ctx.status(401).result("{\"message\": \"Error: unauthorized\"}");
             return;
         }
-        boolean success = userService.logout(authToken);
-        if (!success) {
-            ctx.status(401).result("{\"message\": \"Error: unauthorized\"}");
-        } else {
-            ctx.status(200).result("{}");
+        try {
+            boolean success = userService.logout(authToken);
+            if (!success) {
+                ctx.status(401).result("{\"message\": \"Error: unauthorized\"}");
+            } else {
+                ctx.status(200).result("{}");
+            }
+        } catch (Exception e) {
+            ctx.status(500).result("{\"message\": \"Error: " + e.getMessage() + "\"}");
         }
     }
 }

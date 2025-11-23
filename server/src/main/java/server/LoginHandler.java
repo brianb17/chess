@@ -25,7 +25,7 @@ public class LoginHandler {
             ctx.status(200).result(gson.toJson(auth));
         }
         catch (Exception e) {
-            ctx.status(400).result("{\"message\":\"Error: bad request\"}");
+            ctx.status(500).result("{\"message\":\"Error: bad request\"}");
         }
     }
 }

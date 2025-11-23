@@ -1,6 +1,7 @@
 package service;
 
 import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
 
 public class ClearService {
 
@@ -10,7 +11,11 @@ public class ClearService {
         this.dataAccess = dataAccess;
     }
 
-    public void clearApp() {
-        dataAccess.clear();
+    public void clearApp() throws DataAccessException {
+        try {
+            dataAccess.clear();
+        } catch (Exception e) {
+            throw new DataAccessException("Unexpected error while clearing database: " + e.getMessage(), e);
+        }
     }
 }
