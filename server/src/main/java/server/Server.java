@@ -4,6 +4,7 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.MemoryDataAccess;
+import dataaccess.MySqlDataAccess;
 import datamodel.UserData;
 import io.javalin.*;
 import io.javalin.http.Context;
@@ -17,7 +18,7 @@ public class Server {
     private final UserService userService;
 
     public Server() {
-        var dataAccess = new MemoryDataAccess();
+        var dataAccess = new MySqlDataAccess();
         Gson gson = new Gson();
 
         userService = new UserService(dataAccess);

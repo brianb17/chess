@@ -32,8 +32,8 @@ public class MySqlDataAccess implements DataAccess {
     private static final String CREATE_GAME_TABLE = """
         CREATE TABLE IF NOT EXISTS game (
             gameID INT NOT NULL AUTO_INCREMENT,
-                        whiteUsername VARCHAR(255) NOT NULL,
-                        blackUsername VARCHAR(255) NOT NULL,
+                        whiteUsername VARCHAR(255),
+                        blackUsername VARCHAR(255),
                         gameName VARCHAR(255),
                         chessGame TEXT NOT NULL,
                         PRIMARY KEY (gameID)
@@ -190,25 +190,34 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createGame(GameData game) {
-        String sql = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?, ?)";
-        try (var conn = DatabaseManager.getConnection();
-             var stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (var conn = DatabaseManager.getConnection()) {
 
-            stmt.setInt(1, game.gameID());
-            stmt.setString(2, game.whiteUsername());
-            stmt.setString(3, game.blackUsername());
-            stmt.setString(4, game.gameName());
-            stmt.setString(5, gson.toJson(game.game())); // serialize ChessGame
+            // Generate gameID
+            int gameID;
+            try (var stmt = conn.prepareStatement("SELECT COALESCE(MAX(gameID), 0) + 1 FROM game");
+                 var rs = stmt.executeQuery()) {
+                rs.next();
+                gameID = rs.getInt(1);
+            }
 
-            stmt.executeUpdate();
+            // Insert new game
+            String sql = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?, ?)";
+            try (var stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, gameID);
+                stmt.setString(2, game.whiteUsername());
+                stmt.setString(3, game.blackUsername());
+                stmt.setString(4, game.gameName());
+                stmt.setString(5, gson.toJson(game.game()));
 
-
+                stmt.executeUpdate();
+            }
 
         } catch (SQLException | DataAccessException e) {
             e.printStackTrace();
             throw new RuntimeException("Unable to create game", e);
         }
     }
+
 
 
     @Override
@@ -240,7 +249,7 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public HashMap<Integer, GameData> getAllGames() {
-        String sql = "SELECT gameID, whiteUsername, blackUsername, chessGame FROM game";
+        String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, chessGame FROM game";
         HashMap<Integer, GameData> allGames = new HashMap<>();
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql);
@@ -253,7 +262,7 @@ public class MySqlDataAccess implements DataAccess {
                         id,
                         rs.getString("whiteUsername"),
                         rs.getString("blackUsername"),
-                        "Game " + id,
+                        rs.getString("gameName"),
                         chessGame
                 );
                 allGames.put(id, game);
@@ -273,12 +282,15 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        String sql = "UPDATE game SET chessGame = ? WHERE gameID = ?";
+        String sql = "UPDATE game SET gameName = ?, whiteUsername = ?, blackUsername = ?, chessGame = ? WHERE gameID = ?";
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, gson.toJson(game.game())); // serialize ChessGame
-            stmt.setInt(2, game.gameID());
+            stmt.setString(1, game.gameName());
+            stmt.setString(2, game.whiteUsername());
+            stmt.setString(3, game.blackUsername());
+            stmt.setString(4, gson.toJson(game.game())); // serialize ChessGame
+            stmt.setInt(5, game.gameID());
 
             int rowsUpdated = stmt.executeUpdate();
             if (rowsUpdated == 0) {

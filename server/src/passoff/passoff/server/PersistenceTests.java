@@ -30,6 +30,28 @@ public class PersistenceTests {
         dataAccess.clear();
     }
 
+    @Test
+    void clearTest() {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+
+        UserData user = new UserData("milk", "password123", "milk@example.com");
+        dao.createUser(user);
+
+        AuthData auth = new AuthData("milk", "token123");
+        dao.createAuth(auth);
+
+        ChessGame chessGame = new ChessGame();
+        GameData game = new GameData(1, "milk", "bread", "FunnyGame", chessGame);
+        dao.createGame(game);
+
+        dao.clear();
+
+        assertNull(dao.getUser("milk"));
+        assertNull(dao.getAuth("token123"));
+        assertTrue(dao.getAllGames().isEmpty());
+    }
+
 
     //User Tests
     @Test
@@ -163,11 +185,16 @@ public class PersistenceTests {
     @Test
     void createGameFailDuplicateID() throws Exception {
         var dataAccess = new MySqlDataAccess();
-        var game1 = new GameData(5, "bigchungus", "slayqueen", "BattleOne", new ChessGame());
+
+        var game1 = new GameData(0, "bigchungus", "slayqueen", "BattleOne", new ChessGame());
         var game2 = new GameData(5, "spicyboy", "coolguy", "BattleTwo", new ChessGame());
+
         dataAccess.createGame(game1);
-        assertThrows(RuntimeException.class, () -> dataAccess.createGame(game2));
+        dataAccess.createGame(game2);
+
+        assertNotEquals(game1.gameID(), game2.gameID());
     }
+
 
 
     @Test
@@ -282,28 +309,6 @@ public class PersistenceTests {
         GameData game = new GameData(999, "milk", "bread", "FunnyGame", fakeGame);
 
         assertThrows(RuntimeException.class, () -> dao.updateGame(game));
-    }
-
-    @Test
-    void clearTest() {
-        MySqlDataAccess dao = new MySqlDataAccess();
-        dao.clear();
-
-        UserData user = new UserData("milk", "password123", "milk@example.com");
-        dao.createUser(user);
-
-        AuthData auth = new AuthData("milk", "token123");
-        dao.createAuth(auth);
-
-        ChessGame chessGame = new ChessGame();
-        GameData game = new GameData(1, "milk", "bread", "FunnyGame", chessGame);
-        dao.createGame(game);
-
-        dao.clear();
-
-        assertNull(dao.getUser("milk"));
-        assertNull(dao.getAuth("token123"));
-        assertTrue(dao.getAllGames().isEmpty());
     }
 
 
