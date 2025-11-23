@@ -3,6 +3,7 @@ package service;
 import dataaccess.DataAccess;
 import datamodel.AuthData;
 import datamodel.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;
 
@@ -23,7 +24,14 @@ public class UserService {
         if (dataAccess.getUser(user.username()) != null) {
             throw new Exception("already exists");
         }
-        dataAccess.createUser(user);
+
+        String hashed = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        UserData hashedUser = new UserData(
+                user.username(),
+                user.email(),
+                hashed
+        );
+        dataAccess.createUser(hashedUser);
 
         String token = generateAuthToken();
         var authData = new AuthData(user.username(), token);
@@ -38,7 +46,10 @@ public class UserService {
         }
 
         UserData user = dataAccess.getUser(username);
-        if (user == null || !user.password().equals(password)) {
+        if (user == null) {
+            return null;
+        }
+        if (!BCrypt.checkpw(password, user.password())) {
             return null;
         }
         String token = generateAuthToken();
