@@ -40,18 +40,6 @@ public class MySqlDataAccess implements DataAccess {
         );
     """;
 
-    // Optional: moves table
-//    private static final String CREATE_MOVE_TABLE = """
-//        CREATE TABLE IF NOT EXISTS move (
-//            move_id INT AUTO_INCREMENT PRIMARY KEY,
-//            game_id INT NOT NULL,
-//            move_number INT NOT NULL,
-//            move_data VARCHAR(10) NOT NULL,
-//            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//            FOREIGN KEY (game_id) REFERENCES game(game_id)
-//        );
-//    """;
-
     private final Gson gson = new Gson();
 
     public MySqlDataAccess() {

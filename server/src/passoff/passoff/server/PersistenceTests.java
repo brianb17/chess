@@ -99,7 +99,7 @@ public class PersistenceTests {
 
     //Auth Tests
     @Test
-    void createAuth_positive_createsAuthSuccessfully() {
+    void createAuthPositive() {
         MySqlDataAccess dataAccess = new MySqlDataAccess();
         dataAccess.clear();
 
@@ -114,7 +114,7 @@ public class PersistenceTests {
 
 
     @Test
-    void createAuth_negative_duplicateToken_throwsException() {
+    void createAuthNegative() {
         MySqlDataAccess dataAccess = new MySqlDataAccess();
         dataAccess.clear();
 
@@ -127,7 +127,7 @@ public class PersistenceTests {
     }
 
     @Test
-    void getAuth_positive_returnsAuth() {
+    void getAuthPositive() {
         MySqlDataAccess dataAccess = new MySqlDataAccess();
         dataAccess.clear();
 
@@ -141,7 +141,7 @@ public class PersistenceTests {
     }
 
     @Test
-    void getAuth_negative_nonexistentToken_returnsNull() {
+    void getAuthNegative() {
         MySqlDataAccess dataAccess = new MySqlDataAccess();
         dataAccess.clear();
 
@@ -150,7 +150,7 @@ public class PersistenceTests {
     }
 
     @Test
-    void deleteAuth_negative_nonexistentToken_throwsException() {
+    void deleteAuthNegative() {
         MySqlDataAccess dataAccess = new MySqlDataAccess();
         dataAccess.clear();
 
