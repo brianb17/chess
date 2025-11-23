@@ -58,6 +58,8 @@ public class Server {
         } catch (IllegalArgumentException ex) {
             var msg = String.format("{\"message\": \"Error: %s\"}", ex.getMessage());
             ctx.status(400).result(msg);
+        } catch (IllegalStateException ex) {
+            ctx.status(403).result("{\"message\": \"Error: " + ex.getMessage() + "\"}");
         }
         catch (Exception ex) {
             var msg = String.format("{\"message\": \"Error: %s\"}", ex.getMessage());

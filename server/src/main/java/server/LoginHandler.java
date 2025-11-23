@@ -1,6 +1,7 @@
 package server;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import datamodel.AuthData;
 import datamodel.UserData;
 import service.UserService;
@@ -17,15 +18,27 @@ public class LoginHandler {
     public void login(Context ctx) {
         try {
             UserData req = gson.fromJson(ctx.body(), UserData.class);
+
+            // Check for missing fields
+            if (req.username() == null || req.username().isEmpty() ||
+                    req.password() == null || req.password().isEmpty()) {
+                ctx.status(400).result("{\"message\":\"Error: bad request\"}");
+                return;
+            }
+
             AuthData auth = userService.login(req.username(), req.password());
             if (auth == null) {
                 ctx.status(401).result("{\"message\":\"Error: unauthorized\"}");
                 return;
             }
+
             ctx.status(200).result(gson.toJson(auth));
-        }
-        catch (Exception e) {
-            ctx.status(500).result("{\"message\":\"Error: bad request\"}");
+        } catch (JsonSyntaxException e) {
+            // Invalid JSON → Bad Request
+            ctx.status(400).result("{\"message\":\"Error: bad request\"}");
+        } catch (Exception e) {
+            // Anything unexpected → Internal Server Error
+            ctx.status(500).result("{\"message\":\"Error: internal server error\"}");
         }
     }
 }

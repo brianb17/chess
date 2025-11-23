@@ -22,7 +22,7 @@ public class UserService {
             throw new IllegalArgumentException("invalid request");
         }
         if (dataAccess.getUser(user.username()) != null) {
-            throw new Exception("already exists");
+            throw new IllegalStateException("already exists");
         }
 
         String hashed = BCrypt.hashpw(user.password(), BCrypt.gensalt());
