@@ -18,6 +18,10 @@ public class ServerFacade {
 
     //PreLogin
 
+    public void clear() throws Exception {
+        sendDelete("/db", null);
+    }
+
     public AuthData register(String username, String password, String email) throws Exception {
         RegisterRequest req = new RegisterRequest(username, password, email);
         String jsonReq = gson.toJson(req);

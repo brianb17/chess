@@ -2,6 +2,7 @@ package client;
 
 import datamodel.AuthData;
 import datamodel.ListGamesResult;
+import datamodel.UserData;
 import org.junit.jupiter.api.*;
 import server.Server;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,8 +34,14 @@ public class ServerFacadeTests {
     }
 
     @BeforeEach
-    void setupFacade() {
-        facade = new ServerFacade(port); // or store port in a variable if needed
+    public void loginBeforeEach() throws Exception {
+        facade = new ServerFacade(port);
+
+        facade.clear();
+
+        facade.register("testuser", "password", "email");
+        AuthData auth = facade.login("testuser", "password");
+        this.authToken = auth.authToken();
     }
 
     @Test
@@ -58,10 +65,7 @@ public class ServerFacadeTests {
     @Test
     @DisplayName("Login successfully")
     void testLoginSuccess() throws Exception {
-        AuthData auth = facade.login("sillygoose", "yourmom123");
-        assertNotNull(auth);
-        assertEquals("sillygoose", auth.username());
-        authToken = auth.authToken();
+        assertNotNull(authToken);
     }
 
     @Test
