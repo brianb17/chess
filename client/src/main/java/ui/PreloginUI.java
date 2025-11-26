@@ -30,6 +30,7 @@ public class PreloginUI {
                 case "quit":
                     System.out.println("Goodbye!");
                     running = false;
+                    System.exit(0);
                     break;
 
                 case "register":
