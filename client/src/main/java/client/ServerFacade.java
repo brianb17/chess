@@ -69,7 +69,9 @@ public class ServerFacade {
         URL url = new URL(baseUrl + path);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        if (authToken != null) conn.setRequestProperty("authorization", authToken);
+        if (authToken != null) {
+            conn.setRequestProperty("authorization", authToken);
+        }
 
         return getResponse(conn);
     }
@@ -80,7 +82,9 @@ public class ServerFacade {
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/json");
-        if (authToken != null) conn.setRequestProperty("authorization", authToken);
+        if (authToken != null) {
+            conn.setRequestProperty("authorization", authToken);
+        }
 
         try (OutputStream os = conn.getOutputStream()) {
             os.write(json.getBytes());
@@ -95,7 +99,9 @@ public class ServerFacade {
         conn.setRequestMethod("PUT");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/json");
-        if (authToken != null) conn.setRequestProperty("authorization", authToken);
+        if (authToken != null) {
+            conn.setRequestProperty("authorization", authToken);
+        }
 
         try (OutputStream os = conn.getOutputStream()) {
             os.write(json.getBytes());
@@ -108,7 +114,9 @@ public class ServerFacade {
         URL url = new URL(baseUrl + path);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("DELETE");
-        if (authToken != null) conn.setRequestProperty("authorization", authToken);
+        if (authToken != null) {
+            conn.setRequestProperty("authorization", authToken);
+        }
 
         getResponse(conn);
     }
@@ -119,9 +127,15 @@ public class ServerFacade {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             StringBuilder sb = new StringBuilder();
             String line;
-            while ((line = br.readLine()) != null) sb.append(line);
-            if (code >= 200 && code < 300) return sb.toString();
-            else throw new Exception("Server returned error: " + sb.toString());
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            if (code >= 200 && code < 300) {
+                return sb.toString();
+            }
+            else {
+                throw new Exception("Server returned error: " + sb.toString());
+            }
         }
     }
 }
