@@ -1,5 +1,6 @@
 package ui;
 
+import chess.ChessGame;
 import client.ServerFacade;
 import datamodel.AuthData;
 import datamodel.GameData;
@@ -130,15 +131,17 @@ public class PostloginUI {
                 return;
             }
 
-            var game = lastListedGames.get(choice - 1);
+            var gameData = lastListedGames.get(choice - 1);
 
             System.out.print("Enter color to play (WHITE or BLACK): ");
             String color = scanner.nextLine().trim().toUpperCase();
 
-            facade.joinGame(auth.authToken(), game.gameID(), color);
-            System.out.println("Joined game '" + game.gameName() + "' as " + color + ".");
+            facade.joinGame(auth.authToken(), gameData.gameID(), color);
+            System.out.println("Joined game '" + gameData.gameName() + "' as " + color + ".");
 
-            GameUI gameUI = new GameUI(color.equals("WHITE") ? GameUI.Perspective.WHITE : GameUI.Perspective.BLACK);
+            ChessGame localGame = new ChessGame();
+            GameUI gameUI = new GameUI(localGame,
+                    color.equals("WHITE") ? GameUI.Perspective.WHITE : GameUI.Perspective.BLACK);
             gameUI.drawInitialBoard();
 
         } catch (NumberFormatException e) {
@@ -163,10 +166,11 @@ public class PostloginUI {
                 return;
             }
 
-            var game = lastListedGames.get(choice - 1);
-            System.out.println("Observing game '" + game.gameName() + "'.");
+            var gameData = lastListedGames.get(choice - 1);
+            System.out.println("Observing game '" + gameData.gameName() + "'.");
 
-            GameUI gameUI = new GameUI(GameUI.Perspective.WHITE);
+            ChessGame localGame = new ChessGame();
+            GameUI gameUI = new GameUI(localGame, GameUI.Perspective.WHITE); // observers always see from white's perspective
             gameUI.drawInitialBoard();
 
         } catch (NumberFormatException e) {
