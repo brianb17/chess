@@ -3,7 +3,10 @@ package client;
 import com.google.gson.Gson;
 import jakarta.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
+import ui.GameUI;
 import websocket.commands.UserGameCommand;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.ServerMessage;
 
 import java.net.URI;
 
@@ -25,9 +28,15 @@ public class Websocket {
     }
 
     @OnMessage
-    public void onMessage(String message) {
-        System.out.println("Received WebSocket Message");
-        System.out.println(message);
+    public void onMessage(String json) {
+        ServerMessage base = gson.fromJson(json, ServerMessage.class);
+
+        switch (base.getServerMessageType()) {
+            case LOAD_GAME -> {
+                LoadGameMessage msg = gson.fromJson(json, LoadGameMessage.class);
+                ((GameUI) ui).updateBoard(msg.getGame());
+            }
+        }
     }
 
     public void connect(String authToken, int gameID) throws Exception {
