@@ -2,6 +2,7 @@ package ui;
 
 import chess.ChessGame;
 import client.ServerFacade;
+import client.Websocket;
 import datamodel.AuthData;
 import datamodel.GameData;
 import datamodel.ListGamesResult;
@@ -135,14 +136,27 @@ public class PostloginUI {
 
             System.out.print("Enter color to play (WHITE or BLACK): ");
             String color = scanner.nextLine().trim().toUpperCase();
-
             facade.joinGame(auth.authToken(), gameData.gameID(), color);
             System.out.println("Joined game '" + gameData.gameName() + "' as " + color + ".");
 
-            ChessGame localGame = new ChessGame();
-            GameUI gameUI = new GameUI(localGame,
-                    color.equals("WHITE") ? GameUI.Perspective.WHITE : GameUI.Perspective.BLACK);
-            gameUI.drawInitialBoard();
+            GameUI.Perspective perspective;
+            if (color.equals("WHITE")) {
+                perspective = GameUI.Perspective.WHITE;
+            }
+            else {
+                perspective = GameUI.Perspective.BLACK;
+            }
+            GameUI gameUI = new GameUI(null, perspective);
+
+            Websocket ws = new Websocket(gameUI);
+            ws.connect(auth.authToken(), gameData.gameID());
+            System.out.println("Connected to game server.");
+            System.out.println("Waiting for server to send update to load game...");
+
+//            ChessGame localGame = new ChessGame();
+//            GameUI gameUI = new GameUI(localGame,
+//                    color.equals("WHITE") ? GameUI.Perspective.WHITE : GameUI.Perspective.BLACK);
+//            gameUI.drawInitialBoard();
 
         } catch (NumberFormatException e) {
             System.out.println("Invalid number format.");
