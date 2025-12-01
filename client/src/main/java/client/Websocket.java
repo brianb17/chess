@@ -5,6 +5,7 @@ import jakarta.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
 import ui.GameUI;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.ServerMessage;
 
@@ -35,6 +36,10 @@ public class Websocket {
             case LOAD_GAME -> {
                 LoadGameMessage msg = gson.fromJson(json, LoadGameMessage.class);
                 ((GameUI) ui).updateBoard(msg.getGame());
+            }
+            case ERROR -> {
+                ErrorMessage msg = gson.fromJson(json, ErrorMessage.class);
+                System.out.println("Server error: " + msg.getMessage());
             }
         }
     }
