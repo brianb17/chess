@@ -44,6 +44,12 @@ public class Server {
         server.put("/game", joinGameHandler::joinsgame);
         // Register your endpoints and exception handlers here.
 
+        server.ws("/ws", ws -> {
+            ws.onConnect(WebSocketHandler::onConnect);
+            ws.onMessage(WebSocketHandler::onMessage);
+            ws.onClose(WebSocketHandler::onClose);
+        });
+
     }
 
     private void register(Context ctx) {
