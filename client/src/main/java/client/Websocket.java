@@ -7,6 +7,7 @@ import ui.GameUI;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.net.URI;
@@ -41,6 +42,11 @@ public class Websocket {
                 ErrorMessage msg = gson.fromJson(json, ErrorMessage.class);
                 System.out.println("Server error: " + msg.getMessage());
             }
+            case NOTIFICATION -> {
+                NotificationMessage msg = gson.fromJson(json, NotificationMessage.class);
+                System.out.println("Notification: " + msg.getMessage());
+            }
+
         }
     }
 
