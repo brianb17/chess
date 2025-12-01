@@ -69,4 +69,10 @@ public class UserService {
     private String generateAuthToken() {
         return UUID.randomUUID().toString();
     }
+
+    public String getUsernameFromToken(String authToken) {
+        var auth = dataAccess.getAuth(authToken);
+        return auth != null ? auth.username() : null;
+    }
+
 }
