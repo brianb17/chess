@@ -50,6 +50,10 @@ public class WebSocketHandler {
                 GameData game = gameService.getGameById(gameID);
                 if (game == null) {
                     System.out.println("Game not found: " + gameID);
+                    JsonObject error = new JsonObject();
+                    error.addProperty("serverMessageType", "ERROR");
+                    error.addProperty("errorMessage", "Error: invalid gameID");
+                    ctx.send(gson.toJson(error));
                     return;
                 }
 
