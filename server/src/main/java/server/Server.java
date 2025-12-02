@@ -31,6 +31,7 @@ public class Server {
         var createGameHandler = new CreateGameHandler(gameService);
         var listGamesHandler = new ListGamesHandler(gameService);
         var joinGameHandler = new JoinGameHandler(gameService, gson);
+        var wsHandler = new WebSocketHandler(userService, gameService);
 
 
         server = Javalin.create(config -> config.staticFiles.add("web"));
@@ -45,9 +46,9 @@ public class Server {
         // Register your endpoints and exception handlers here.
 
         server.ws("/ws", ws -> {
-            ws.onConnect(WebSocketHandler::onConnect);
-            ws.onMessage(WebSocketHandler::onMessage);
-            ws.onClose(WebSocketHandler::onClose);
+            ws.onConnect(wsHandler::onConnect);
+            ws.onMessage(wsHandler::onMessage);
+            ws.onClose(wsHandler::onClose);
         });
 
     }
