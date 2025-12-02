@@ -53,14 +53,17 @@ public class WebSocketHandler {
                     return;
                 }
 
-                String color;
-                if (game.whiteUsername() == null) color = "WHITE";
-                else if (game.blackUsername() == null) color = "BLACK";
-                else color = null; // both spots taken
+                String color = null;
+                if (game.whiteUsername() == null) {
+                    color = "WHITE";
+                }
+                else if (game.blackUsername() == null) {
+                    color = "BLACK";
+                }
 
                 if (color != null) {
-                    JoinGameRequest request = new JoinGameRequest(gameID, color);
                     try {
+                        JoinGameRequest request = new JoinGameRequest(gameID, color);
                         gameService.joinGame(authToken, request);
                     } catch (IllegalArgumentException | IllegalStateException e) {
                         System.out.println("Join failed: " + e.getMessage());
@@ -69,18 +72,28 @@ public class WebSocketHandler {
                 }
 
                 GameData updatedGame = gameService.getGameById(gameID);
-                JsonObject gameJson = new JsonObject();
-                gameJson.addProperty("gameID", updatedGame.gameID());
-                gameJson.addProperty("whitePlayer", updatedGame.whiteUsername());
-                gameJson.addProperty("blackPlayer", updatedGame.blackUsername());
-                gameJson.add("board", gson.toJsonTree(updatedGame.game().getBoard()));
-                gameJson.addProperty("turn", updatedGame.game().getTeamTurn().toString());
-
                 JsonObject loadGame = new JsonObject();
                 loadGame.addProperty("serverMessageType", "LOAD_GAME");
-                loadGame.add("game", gameJson);
-
+                loadGame.add("game", gson.toJsonTree(updatedGame));
                 ctx.send(gson.toJson(loadGame));
+
+                for (WsConnectContext otherCtx : sessions.values()) {
+                    if (!otherCtx.sessionId().equals(ctx.sessionId())) {
+                        JsonObject notif = new JsonObject();
+                        notif.addProperty("serverMessageType", "NOTIFICATION");
+
+                        String joiningAs;
+                        if (color == null) {
+                            joiningAs = "SPECTATOR";
+                        } else {
+                            joiningAs = color;
+                        }
+
+                        notif.addProperty("message", username + " joined the game as " + joiningAs);
+                        otherCtx.send(gson.toJson(notif));
+                    }
+                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
