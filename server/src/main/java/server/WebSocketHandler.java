@@ -1,5 +1,8 @@
 package server;
 
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import datamodel.GameData;
@@ -9,6 +12,7 @@ import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
 import service.GameService;
 import service.UserService;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 
 import java.util.Map;
@@ -38,70 +42,132 @@ public class WebSocketHandler {
             JsonObject json = gson.fromJson(msg, JsonObject.class);
             String commandType = json.get("commandType").getAsString();
 
-            if ("CONNECT".equals(commandType)) {
-                String authToken = json.get("authToken").getAsString();
-                int gameID = json.get("gameID").getAsInt();
-                String username = userService.getUsernameFromToken(authToken);
-                if (username == null) {
-                    System.out.println("Invalid auth token: " + authToken);
-                    return;
+            switch (commandType) {
+                case "CONNECT" -> handleConnect(ctx, json);
+                case "MAKE_MOVE" -> {
+                    MakeMoveCommand cmd = gson.fromJson(msg, MakeMoveCommand.class);
+                    handleMakeMove(ctx, cmd);
                 }
-
-                GameData game = gameService.getGameById(gameID);
-                if (game == null) {
-                    System.out.println("Game not found: " + gameID);
-                    JsonObject error = new JsonObject();
-                    error.addProperty("serverMessageType", "ERROR");
-                    error.addProperty("errorMessage", "Error: invalid gameID");
-                    ctx.send(gson.toJson(error));
-                    return;
-                }
-
-                String color = null;
-                if (game.whiteUsername() == null) {
-                    color = "WHITE";
-                }
-                else if (game.blackUsername() == null) {
-                    color = "BLACK";
-                }
-
-                if (color != null) {
-                    try {
-                        JoinGameRequest request = new JoinGameRequest(gameID, color);
-                        gameService.joinGame(authToken, request);
-                    } catch (IllegalArgumentException | IllegalStateException e) {
-                        System.out.println("Join failed: " + e.getMessage());
-                        return;
-                    }
-                }
-
-                GameData updatedGame = gameService.getGameById(gameID);
-                JsonObject loadGame = new JsonObject();
-                loadGame.addProperty("serverMessageType", "LOAD_GAME");
-                loadGame.add("game", gson.toJsonTree(updatedGame));
-                ctx.send(gson.toJson(loadGame));
-
-                for (WsConnectContext otherCtx : sessions.values()) {
-                    if (!otherCtx.sessionId().equals(ctx.sessionId())) {
-                        JsonObject notif = new JsonObject();
-                        notif.addProperty("serverMessageType", "NOTIFICATION");
-
-                        String joiningAs;
-                        if (color == null) {
-                            joiningAs = "SPECTATOR";
-                        } else {
-                            joiningAs = color;
-                        }
-
-                        notif.addProperty("message", username + " joined the game as " + joiningAs);
-                        otherCtx.send(gson.toJson(notif));
-                    }
-                }
-
+                default -> sendError(ctx, "Unknown commandType: " + commandType);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleConnect(WsMessageContext ctx, JsonObject json) {
+        try {
+            String authToken = json.get("authToken").getAsString();
+            int gameID = json.get("gameID").getAsInt();
+            String username = userService.getUsernameFromToken(authToken);
+
+            if (username == null) {
+                System.out.println("Bad AuthToken: " + authToken);
+                sendError(ctx, "Error: unauthorized");
+                return;
+            }
+
+            GameData game = gameService.getGameById(gameID);
+            if (game == null) {
+                System.out.println("Game not found: " + gameID);
+                sendError(ctx, "Error: invalid gameID");
+                return;
+            }
+
+            String color = null;
+            if (game.whiteUsername() == null) {
+                color = "WHITE";
+            } else if (game.blackUsername() == null) {
+                color = "BLACK";
+            }
+
+            if (color != null) {
+                try {
+                    JoinGameRequest request = new JoinGameRequest(gameID, color);
+                    gameService.joinGame(authToken, request);
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    System.out.println("Join failed: " + e.getMessage());
+                    sendError(ctx, "Error: " + e.getMessage());
+                    return;
+                }
+            }
+
+            // Send the updated game to the connecting user
+            GameData updatedGame = gameService.getGameById(gameID);
+            JsonObject loadGame = new JsonObject();
+            loadGame.addProperty("serverMessageType", "LOAD_GAME");
+            loadGame.add("game", gson.toJsonTree(updatedGame));
+            ctx.send(gson.toJson(loadGame));
+
+            // Notify other sessions
+            for (WsConnectContext otherCtx : sessions.values()) {
+                if (!otherCtx.sessionId().equals(ctx.sessionId())) {
+                    JsonObject notif = new JsonObject();
+                    notif.addProperty("serverMessageType", "NOTIFICATION");
+
+                    String joiningAs = (color == null) ? "SPECTATOR" : color;
+                    notif.addProperty("message", username + " joined the game as " + joiningAs);
+                    otherCtx.send(gson.toJson(notif));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendError(ctx, "Error processing CONNECT command: " + e.getMessage());
+        }
+    }
+
+
+
+    private void handleMakeMove(WsMessageContext ctx, MakeMoveCommand cmd) {
+        String authToken = cmd.getAuthToken();
+        Integer gameID = cmd.getGameID();
+        ChessMove move = cmd.getMove();
+
+        String username = userService.getUsernameFromToken(authToken);
+        if (username == null) {
+            sendError(ctx, "Error: unauthorized");
+            return;
+        }
+
+        GameData gameData = gameService.getGameById(gameID);
+        if (gameData == null) {
+            sendError(ctx, "Error: invalid gameID");
+            return;
+        }
+
+        ChessGame chess = gameData.game();
+        try {
+            chess.makeMove(move);
+        } catch (InvalidMoveException e) {
+            sendError(ctx, "Error: " + e.getMessage());
+            return;
+        }
+
+        GameData updatedGame = gameService.getGameById(gameID);
+        JsonObject loadGame = new JsonObject();
+        loadGame.addProperty("serverMessageType", "LOAD_GAME");
+        loadGame.add("game", gson.toJsonTree(updatedGame));
+
+        JsonObject notif = new JsonObject();
+        notif.addProperty("serverMessageType", "NOTIFICATION");
+        notif.addProperty("message", username + " made a move.");
+
+        for (WsConnectContext sessionCtx : sessions.values()) {
+            if (sessionCtx.sessionId().equals(ctx.sessionId())) {
+                sessionCtx.send(gson.toJson(loadGame));
+            } else {
+                sessionCtx.send(gson.toJson(loadGame));
+                sessionCtx.send(gson.toJson(notif));
+            }
+        }
+    }
+
+    private void sendError(WsMessageContext ctx, String message) {
+        JsonObject error = new JsonObject();
+        error.addProperty("serverMessageType", "ERROR");
+        error.addProperty("errorMessage", message);
+        ctx.send(gson.toJson(error));
     }
 
     public void onClose(WsCloseContext ctx) {
