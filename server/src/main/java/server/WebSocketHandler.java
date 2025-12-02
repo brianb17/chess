@@ -5,6 +5,7 @@ import chess.ChessMove;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import dataaccess.DataAccessException;
 import datamodel.GameData;
 import datamodel.JoinGameRequest;
 import io.javalin.websocket.WsCloseContext;
@@ -137,29 +138,56 @@ public class WebSocketHandler {
         }
 
         ChessGame chess = gameData.game();
-        try {
-            chess.makeMove(move);
-        } catch (InvalidMoveException e) {
-            sendError(ctx, "Error: " + e.getMessage());
+        if (chess.isGameOver()) {
+            sendError(ctx, "Game is over, no more moves allowed.");
             return;
         }
 
-        GameData updatedGame = gameService.getGameById(gameID);
-        JsonObject loadGame = new JsonObject();
-        loadGame.addProperty("serverMessageType", "LOAD_GAME");
-        loadGame.add("game", gson.toJsonTree(updatedGame));
-
-        JsonObject notif = new JsonObject();
-        notif.addProperty("serverMessageType", "NOTIFICATION");
-        notif.addProperty("message", username + " made a move.");
-
-        for (WsConnectContext sessionCtx : sessions.values()) {
-            if (sessionCtx.sessionId().equals(ctx.sessionId())) {
-                sessionCtx.send(gson.toJson(loadGame));
+        try {
+            ChessGame.TeamColor playerColorEnum;
+            if (username.equals(gameData.whiteUsername())) {
+                playerColorEnum = ChessGame.TeamColor.WHITE;
+            } else if (username.equals(gameData.blackUsername())) {
+                playerColorEnum = ChessGame.TeamColor.BLACK;
             } else {
-                sessionCtx.send(gson.toJson(loadGame));
-                sessionCtx.send(gson.toJson(notif));
+                sendError(ctx, "Invalid move: You are not a player in this game");
+                return;
             }
+
+            if (chess.getTeamTurn() != playerColorEnum) {
+                sendError(ctx, "Invalid move: Not your turn");
+                return;
+            }
+            chess.makeMove(move);
+
+            GameData updatedGameData = new GameData(
+                    gameData.gameID(),
+                    gameData.whiteUsername(),
+                    gameData.blackUsername(),
+                    gameData.gameName(),
+                    chess
+            );
+            gameService.updateGame(updatedGameData);
+
+            JsonObject loadGame = new JsonObject();
+            loadGame.addProperty("serverMessageType", "LOAD_GAME");
+            loadGame.add("game", gson.toJsonTree(updatedGameData));
+
+            JsonObject notif = new JsonObject();
+            notif.addProperty("serverMessageType", "NOTIFICATION");
+            notif.addProperty("message", username + " made a move.");
+
+            for (WsConnectContext sessionCtx : sessions.values()) {
+                sessionCtx.send(gson.toJson(loadGame));
+                if (!sessionCtx.sessionId().equals(ctx.sessionId())) {
+                    sessionCtx.send(gson.toJson(notif));
+                }
+            }
+
+        } catch (InvalidMoveException e) {
+            sendError(ctx, "Invalid move: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 

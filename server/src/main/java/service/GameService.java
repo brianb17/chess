@@ -98,6 +98,10 @@ public class GameService {
         dataAccess.updateGame(game);
     }
 
+    public void updateGame(GameData game) throws DataAccessException {
+        dataAccess.updateGame(game);
+    }
+
     public GameData getGameById(int gameID) {
         return dataAccess.getGame(gameID);
     }
