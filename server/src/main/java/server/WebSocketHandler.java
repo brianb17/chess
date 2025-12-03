@@ -53,11 +53,44 @@ public class WebSocketHandler {
                     UserGameCommand cmd = gson.fromJson(msg, UserGameCommand.class);
                     handleResign(ctx, cmd);
                 }
+                case "LEAVE" -> {
+                    UserGameCommand cmd = gson.fromJson(msg, UserGameCommand.class);
+                    handleLeave(ctx, cmd);
+                    break;
+                }
                 default -> sendError(ctx, "Unknown commandType: " + commandType);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void handleLeave(WsMessageContext ctx, UserGameCommand cmd) {
+        String authToken = cmd.getAuthToken();
+        Integer gameID = cmd.getGameID();
+        String username = userService.getUsernameFromToken(authToken);
+
+        if (username == null) {
+            sendError(ctx, "Error: unauthorized");
+            return;
+        }
+
+        JsonObject notif = new JsonObject();
+        notif.addProperty("serverMessageType", "NOTIFICATION");
+        notif.addProperty("message", username + " left the game");
+
+        for (WsConnectContext otherCtx : sessions.values()) {
+            if (!otherCtx.sessionId().equals(ctx.sessionId())) {
+                otherCtx.send(gson.toJson(notif));
+            }
+        }
+
+        sessions.remove(ctx.sessionId());
+        try {
+            ctx.closeSession();
+        } catch (Exception ignored) {
+
         }
     }
 
