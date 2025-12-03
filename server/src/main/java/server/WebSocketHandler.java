@@ -49,11 +49,66 @@ public class WebSocketHandler {
                     MakeMoveCommand cmd = gson.fromJson(msg, MakeMoveCommand.class);
                     handleMakeMove(ctx, cmd);
                 }
+                case "RESIGN" -> {
+                    UserGameCommand cmd = gson.fromJson(msg, UserGameCommand.class);
+                    handleResign(ctx, cmd);
+                }
                 default -> sendError(ctx, "Unknown commandType: " + commandType);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void handleResign(WsMessageContext ctx, UserGameCommand cmd) throws DataAccessException {
+        String authToken = cmd.getAuthToken();
+        Integer gameID = cmd.getGameID();
+        String username = userService.getUsernameFromToken(authToken);
+
+        if (username == null) {
+            sendError(ctx, "Error: unauthorized");
+            return;
+        }
+
+        GameData gameData = gameService.getGameById(gameID);
+        if (gameData == null) {
+            sendError(ctx, "Error: invalid gameID");
+            return;
+        }
+
+        if (gameData.game().isGameOver()) {
+            sendError(ctx, "Game is already over.");
+            return;
+        }
+
+        String winner;
+        if (username.equals(gameData.whiteUsername())) {
+            winner = gameData.blackUsername();
+        } else if (username.equals(gameData.blackUsername())) {
+            winner = gameData.whiteUsername();
+        } else {
+            sendError(ctx, "Error: you are not a player in this game");
+            return;
+        }
+        ChessGame chess = gameData.game();
+        chess.setGameOver(true);
+
+        GameData updatedGame = new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                chess
+        );
+        gameService.updateGame(updatedGame);
+
+        JsonObject notif = new JsonObject();
+        notif.addProperty("serverMessageType", "NOTIFICATION");
+        notif.addProperty("message", username + " resigned. " + winner + " wins!");
+
+        for (WsConnectContext sessionCtx : sessions.values()) {
+            sessionCtx.send(gson.toJson(notif));
         }
     }
 

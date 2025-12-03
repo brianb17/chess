@@ -15,6 +15,7 @@ public class ChessGame {
 
     private TeamColor teamTurn;
     private ChessBoard board;
+    private boolean gameOver = false;
     public ChessGame() {
         board = new ChessBoard();
         board.resetBoard();
@@ -35,6 +36,10 @@ public class ChessGame {
      */
     public void setTeamTurn(TeamColor team) {
         teamTurn = team;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     /**
@@ -219,10 +224,8 @@ public class ChessGame {
     }
 
     public boolean isGameOver() {
-        return  isInCheckmate(TeamColor.WHITE) ||
-                isInCheckmate(TeamColor.BLACK) ||
-                isInStalemate(TeamColor.WHITE) ||
-                isInStalemate(TeamColor.BLACK);
+        return gameOver || isInCheckmate(TeamColor.WHITE) || isInCheckmate(TeamColor.BLACK)
+                || isInStalemate(TeamColor.WHITE) || isInStalemate(TeamColor.BLACK);
     }
 
 
