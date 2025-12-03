@@ -76,6 +76,31 @@ public class WebSocketHandler {
             return;
         }
 
+        try {
+            GameData gameData = gameService.getGameById(gameID);
+            if (gameData != null) {
+                String white = gameData.whiteUsername();
+                String black = gameData.blackUsername();
+
+                if (username.equals(white)) {
+                    white = null;
+                } else if (username.equals(black)) {
+                    black = null;
+                }
+
+                ChessGame chess = gameData.game();
+                GameData updated = new GameData(
+                        gameData.gameID(),
+                        white,
+                        black,
+                        gameData.gameName(),
+                        chess
+                );
+                gameService.updateGame(updated);
+            }
+        } catch (Exception ignored) {
+        }
+
         JsonObject notif = new JsonObject();
         notif.addProperty("serverMessageType", "NOTIFICATION");
         notif.addProperty("message", username + " left the game");
