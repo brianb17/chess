@@ -8,6 +8,7 @@ public class BoardUI {
 
     public static void printBoard(ChessGame game, Perspective perspective) {
         var board = game.getBoard();
+        System.out.println();
 
         if (perspective == Perspective.WHITE) {
             drawWhitePerspective(board);
@@ -91,18 +92,41 @@ public class BoardUI {
         };
     }
 
+
     private static void printColumnLabelsWhite() {
         System.out.print("   ");
+        boolean bigPrint = true;
+        int counter = 0;
         for (char c = 'a'; c <= 'h'; c++) {
-            System.out.print(" " + c + " ");
+            if (bigPrint) {
+                System.out.print(" " + c + "  ");
+            } else {
+                System.out.print(" " + c + " ");
+            }
+            bigPrint = !bigPrint;
+            counter++;
+            if (counter == 4) {
+                System.out.print(" ");
+            }
         }
         System.out.println();
     }
 
     private static void printColumnLabelsBlack() {
         System.out.print("   ");
+        boolean bigPrint = true;
+        int counter = 0;
         for (char c = 'h'; c >= 'a'; c--) {
-            System.out.print(" " + c + " ");
+            if (bigPrint) {
+                System.out.print(" " + c + "  ");
+            } else {
+                System.out.print(" " + c + " ");
+            }
+            bigPrint = !bigPrint;
+            counter++;
+            if (counter == 4) {
+                System.out.print(" ");
+            }
         }
         System.out.println();
     }
