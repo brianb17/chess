@@ -154,6 +154,9 @@ public class PostloginUI {
             System.out.println("Connected to game server.");
             System.out.println("Waiting for server to send update to load game...");
 
+            GameLoop loop = new GameLoop(ws, gameUI, auth.authToken(), gameData.gameID());
+            loop.start();
+
 //            ChessGame localGame = new ChessGame();
 //            GameUI gameUI = new GameUI(localGame,
 //                    color.equals("WHITE") ? GameUI.Perspective.WHITE : GameUI.Perspective.BLACK);

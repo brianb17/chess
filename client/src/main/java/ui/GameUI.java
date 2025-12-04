@@ -20,6 +20,8 @@ public class GameUI {
         } else {
             BoardUI.printBoard(game, BoardUI.Perspective.BLACK);
         }
+        System.out.println();
+        System.out.print("Enter a Command:");
     }
 
     public void drawInitialBoard() {
