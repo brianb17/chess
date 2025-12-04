@@ -66,7 +66,7 @@ public class PreloginUI {
             System.out.print("Email: ");
             String email = scanner.nextLine().trim();
 
-            AuthData auth = facade.register(username, email, password);
+            AuthData auth = facade.register(username, password, email);
             System.out.println("Registration successful! Logged in as " + auth.username());
 
             PostloginUI postlogin = new PostloginUI(facade, auth);

@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class PostloginUI {
 
     private final ServerFacade facade;
-    private final AuthData auth;
+    private AuthData auth;
     private final Scanner scanner = new Scanner(System.in);
 
     private List<GameData> lastListedGames;
@@ -77,6 +77,7 @@ public class PostloginUI {
         try {
             facade.logout(auth.authToken());
             System.out.println("Logged out successfully.");
+            auth = null;
         } catch (Exception e) {
             System.out.println("Error logging out: " + e.getMessage());
         }
