@@ -37,6 +37,7 @@ public class WebSocketHandler {
         System.out.println("WebSocket connected " + ctx.sessionId());
     }
 
+
     public void onMessage(WsMessageContext ctx) {
         String msg = ctx.message();
         System.out.println("Websocket message received: " + msg);
