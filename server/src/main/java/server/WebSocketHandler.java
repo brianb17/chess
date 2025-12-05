@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler {
-    private static final Map<String, WsConnectContext> sessions = new ConcurrentHashMap<>();
+    private static final Map<String, WsConnectContext> SESSIONS = new ConcurrentHashMap<>();
     private static final Gson GSON = new Gson();
     private static final Map<String, Integer> SESSION_TO_GAME = new ConcurrentHashMap<>();
 
@@ -33,7 +33,7 @@ public class WebSocketHandler {
     }
 
     public void onConnect(WsConnectContext ctx) {
-        sessions.put(ctx.sessionId(), ctx);
+        SESSIONS.put(ctx.sessionId(), ctx);
         System.out.println("WebSocket connected " + ctx.sessionId());
     }
 
@@ -129,7 +129,7 @@ public class WebSocketHandler {
         Integer leavingGameID = SESSION_TO_GAME.get(ctx.sessionId());
         SESSION_TO_GAME.remove(ctx.sessionId());
 
-        for (WsConnectContext otherCtx : sessions.values()) {
+        for (WsConnectContext otherCtx : SESSIONS.values()) {
             Integer otherGameID = SESSION_TO_GAME.get(otherCtx.sessionId());
             if (!otherCtx.sessionId().equals(ctx.sessionId()) &&
                     leavingGameID != null &&
@@ -138,7 +138,7 @@ public class WebSocketHandler {
             }
         }
 
-        sessions.remove(ctx.sessionId());
+        SESSIONS.remove(ctx.sessionId());
         try {
             ctx.closeSession();
         } catch (Exception ignored) {
@@ -192,7 +192,7 @@ public class WebSocketHandler {
         notif.addProperty("serverMessageType", "NOTIFICATION");
         notif.addProperty("message", username + " resigned. " + winner + " wins!");
 
-        for (WsConnectContext sessionCtx : sessions.values()) {
+        for (WsConnectContext sessionCtx : SESSIONS.values()) {
             Integer otherGameID = SESSION_TO_GAME.get(sessionCtx.sessionId());
             if (otherGameID != null && otherGameID.equals(gameID)) {
                 sessionCtx.send(GSON.toJson(notif));
@@ -240,7 +240,7 @@ public class WebSocketHandler {
             SESSION_TO_GAME.put(ctx.sessionId(), gameID);
 
             // Notify other sessions in the same game that someone joined (as spectator or as a player if they were already assigned)
-            for (WsConnectContext otherCtx : sessions.values()) {
+            for (WsConnectContext otherCtx : SESSIONS.values()) {
                 if (!otherCtx.sessionId().equals(ctx.sessionId())) {
                     Integer otherGameID = SESSION_TO_GAME.get(otherCtx.sessionId());
                     if (otherGameID != null && otherGameID.equals(gameID)) {
@@ -342,7 +342,7 @@ public class WebSocketHandler {
             notif.addProperty("serverMessageType", "NOTIFICATION");
             notif.addProperty("message", baseMessage + messageSuffix);
 
-            for (WsConnectContext sessionCtx : sessions.values()) {
+            for (WsConnectContext sessionCtx : SESSIONS.values()) {
                 Integer otherGameID = SESSION_TO_GAME.get(sessionCtx.sessionId());
                 if (otherGameID != null && otherGameID.equals(gameID)) {
                     sessionCtx.send(GSON.toJson(loadGame));
@@ -369,7 +369,7 @@ public class WebSocketHandler {
 
     public void onClose(WsCloseContext ctx) {
         String sessionId = ctx.sessionId();
-        sessions.remove(sessionId);
+        SESSIONS.remove(sessionId);
         SESSION_TO_GAME.remove(sessionId);
         System.out.println("WebSocket closed: " + sessionId);
     }
