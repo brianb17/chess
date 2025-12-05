@@ -315,10 +315,33 @@ public class WebSocketHandler {
             loadGame.addProperty("serverMessageType", "LOAD_GAME");
             loadGame.add("game", gson.toJsonTree(updatedGameData.game()));
 
+            String baseMessage = String.format("%s played %s", username, moveDescription);
+            String messageSuffix = "";
+            ChessGame.TeamColor oppColor = chess.getTeamTurn();
+
+            String oppUsername = (oppColor == ChessGame.TeamColor.WHITE) ?
+                                updatedGameData.whiteUsername() :
+                                updatedGameData.blackUsername();
+
+            if (chess.isInCheckmate(oppColor)) {
+                messageSuffix = String.format(" Game over! %s is in checkmate. %s wins!",
+                        oppUsername,
+                        username);
+                chess.setGameOver(true); // Ensure the game object reflects game over
+                gameService.updateGame(updatedGameData); // Re-save the game state (for isGameOver)
+
+            } else if (chess.isInCheck(oppColor)) {
+                messageSuffix = String.format(" %s is in check!", oppUsername);
+
+            } else if (chess.isInStalemate(oppColor)) {
+                messageSuffix = " Game over! It's a stalemate.";
+                chess.setGameOver(true);
+                gameService.updateGame(updatedGameData);
+            }
+
             JsonObject notif = new JsonObject();
             notif.addProperty("serverMessageType", "NOTIFICATION");
-            String notificationMessage = String.format("%s played %s.", username, moveDescription);
-            notif.addProperty("message", notificationMessage);
+            notif.addProperty("message", baseMessage + messageSuffix);
 
             for (WsConnectContext sessionCtx : sessions.values()) {
                 Integer otherGameID = sessionToGame.get(sessionCtx.sessionId());
