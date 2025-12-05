@@ -195,7 +195,7 @@ public class PostloginUI {
             perspective = GameUI.Perspective.WHITE;
         }
 
-        GameUI gameUI = new GameUI(null, perspective);
+        GameUI gameUI = new GameUI(gameData.game(), perspective);
 
         Websocket ws = new Websocket(gameUI);
         ws.connect(auth.authToken(), gameData.gameID());

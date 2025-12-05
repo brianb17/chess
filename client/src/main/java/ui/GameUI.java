@@ -40,16 +40,6 @@ public class GameUI {
         System.out.print("Enter a command: ");
     }
 
-    public void drawInitialBoard() {
-        drawBoard();
-    }
-
-    public void redrawBAP() {
-        this.clearHighlights();
-        this.drawBoard();
-        System.out.println();
-        System.out.print("Enter a Command ");
-    }
 
     private void printBoardOnly() {
         if (perspective == Perspective.WHITE) {
