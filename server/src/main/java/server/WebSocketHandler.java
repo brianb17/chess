@@ -2,6 +2,7 @@ package server;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPosition;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -66,6 +67,25 @@ public class WebSocketHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String getPositionDescription(ChessPosition pos) {
+        char col = (char) ('a' + pos.getColumn() - 1);
+        int row = pos.getRow();
+        return String.valueOf(col) + row;
+    }
+
+    private String getMoveDescription(ChessMove move) {
+        String start = getPositionDescription(move.getStartPosition());
+        String end = getPositionDescription(move.getEndPosition());
+
+        if (move.getPromotionPiece() != null) {
+            return String.format("%s to %s (Promotes to %s)",
+                    start,
+                    end,
+                    move.getPromotionPiece().toString());
+        }
+        return start + " to " + end;
     }
 
     private void handleLeave(WsMessageContext ctx, UserGameCommand cmd) {
@@ -280,6 +300,7 @@ public class WebSocketHandler {
                 return;
             }
             chess.makeMove(move);
+            String moveDescription = getMoveDescription(move);
 
             GameData updatedGameData = new GameData(
                     gameData.gameID(),
@@ -296,15 +317,14 @@ public class WebSocketHandler {
 
             JsonObject notif = new JsonObject();
             notif.addProperty("serverMessageType", "NOTIFICATION");
-            notif.addProperty("message", username + " made a move.");
+            String notificationMessage = String.format("%s played %s.", username, moveDescription);
+            notif.addProperty("message", notificationMessage);
 
             for (WsConnectContext sessionCtx : sessions.values()) {
                 Integer otherGameID = sessionToGame.get(sessionCtx.sessionId());
                 if (otherGameID != null && otherGameID.equals(gameID)) {
                     sessionCtx.send(gson.toJson(loadGame));
-                    if (!sessionCtx.sessionId().equals(ctx.sessionId())) {
-                        sessionCtx.send(gson.toJson(notif));
-                    }
+                    sessionCtx.send(gson.toJson(notif));
                 }
             }
 
