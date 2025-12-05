@@ -13,12 +13,14 @@ public class GameLoop {
     private final GameUI gameUI;
     private final String authToken;
     private final int gameID;
+    private final String playerColor;
 
-    public GameLoop(Websocket ws, GameUI gameUI, String authToken, int gameID) {
+    public GameLoop(Websocket ws, GameUI gameUI, String authToken, int gameID, String playerColor) {
         this.ws = ws;
         this.gameUI = gameUI;
         this.authToken = authToken;
         this.gameID = gameID;
+        this.playerColor = playerColor;
     }
 
     public void start() {
@@ -51,40 +53,48 @@ public class GameLoop {
                     running[0] = false;
                     heartbeat.interrupt();
                 }
-                case "resign" -> {
-                    ws.sendResign(authToken, gameID);
-                    running[0] = false;
-                    heartbeat.interrupt();
-                }
-                case "move" -> {
-                    MoveReader moveReader = new MoveReader(scanner);
-                    ChessMove move = moveReader.readMove();
-                    if (move != null) {
-                        ws.sendMove(authToken, gameID, move);
+                case "resign", "move", "highlight" -> {
+                    if (playerColor == null) {
+                        System.out.println("Observers can't use this command.");
                     }
-                }
-                case "highlight" -> {
-                    MoveReader moveReader = new MoveReader(scanner);
-                    ChessPosition startPosition = moveReader.readPosition("Enter piece position (e.g., e2):");
 
-                    if (startPosition != null) {
-                        gameUI.clearHighlights();
-                        Collection<ChessMove> moves = gameUI.getGame().validMoves(startPosition);
-
-                        if (moves == null || moves.isEmpty()) {
-                            System.out.println("No legal moves for the piece at " + startPosition.toString());
-                            break;
+                    switch (input) {
+                        case "resign" -> {
+                            ws.sendResign(authToken, gameID);
+                            running[0] = false;
+                            heartbeat.interrupt();
                         }
-
-                        Collection<ChessPosition> positionsToHighlight = new java.util.HashSet<>();
-                        positionsToHighlight.add(startPosition);
-
-                        for (ChessMove move : moves) {
-                            positionsToHighlight.add(move.getEndPosition());
+                        case "move" -> {
+                            MoveReader moveReader = new MoveReader(scanner);
+                            ChessMove move = moveReader.readMove();
+                            if (move != null) {
+                                ws.sendMove(authToken, gameID, move);
+                            }
                         }
+                        case "highlight" -> {
+                            MoveReader moveReader = new MoveReader(scanner);
+                            ChessPosition startPosition = moveReader.readPosition("Enter piece position (e.g., e2):");
 
-                        gameUI.setHighlightedMoves(positionsToHighlight);
-                        gameUI.drawBoard();
+                            if (startPosition != null) {
+                                gameUI.clearHighlights();
+                                Collection<ChessMove> moves = gameUI.getGame().validMoves(startPosition);
+
+                                if (moves == null || moves.isEmpty()) {
+                                    System.out.println("No legal moves for the piece at " + startPosition.toString());
+                                    break;
+                                }
+
+                                Collection<ChessPosition> positionsToHighlight = new java.util.HashSet<>();
+                                positionsToHighlight.add(startPosition);
+
+                                for (ChessMove move : moves) {
+                                    positionsToHighlight.add(move.getEndPosition());
+                                }
+
+                                gameUI.setHighlightedMoves(positionsToHighlight);
+                                gameUI.drawBoard();
+                            }
+                        }
                     }
                 }
                 default -> System.out.println("Unknown command. Type 'help' for a list of commands.");
@@ -95,14 +105,15 @@ public class GameLoop {
     }
 
     private void printHelp() {
-        System.out.println("""
-                Commands:
-                help       - Show this help text
-                redraw     - Redraw the chess board
-                move       - Make a move
-                resign     - Resign the game
-                leave      - Leave the game
-                highlight  - Highlight legal moves for a piece
-                """);
+        System.out.println("Commands:");
+        System.out.println("  help       - Show this help text");
+        System.out.println("  redraw     - Redraw the chess board");
+        System.out.println("  leave      - Leave the game");
+
+        if (playerColor != null) {
+            System.out.println("  move       - Make a move");
+            System.out.println("  resign     - Resign the game");
+            System.out.println("  highlight  - Highlight legal moves for a piece");
+        }
     }
 }

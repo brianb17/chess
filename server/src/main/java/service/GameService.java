@@ -53,13 +53,12 @@ public class GameService {
     public void joinGame(String authToken, JoinGameRequest request) throws DataAccessException {
         AuthData auth = dataAccess.getAuth(authToken);
         if (auth == null) {
-
             throw new IllegalArgumentException("Error: unauthorized");
         }
 
         String joiningUsername = auth.username();
         String color = request.playerColor();
-        if (!"WHITE".equalsIgnoreCase(color) && !"BLACK".equalsIgnoreCase(color)) {
+        if (color == null || !("WHITE".equalsIgnoreCase(color) || "BLACK".equalsIgnoreCase(color))) {
             throw new IllegalArgumentException("Error: bad request");
         }
 

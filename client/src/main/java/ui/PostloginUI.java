@@ -149,27 +149,7 @@ public class PostloginUI {
             facade.joinGame(auth.authToken(), gameData.gameID(), color);
             System.out.println("Joined game '" + gameData.gameName() + "' as " + color + ".");
 
-            GameUI.Perspective perspective;
-            if (color.equals("WHITE")) {
-                perspective = GameUI.Perspective.WHITE;
-            }
-            else {
-                perspective = GameUI.Perspective.BLACK;
-            }
-            GameUI gameUI = new GameUI(null, perspective);
-
-            Websocket ws = new Websocket(gameUI);
-            ws.connect(auth.authToken(), gameData.gameID());
-            System.out.println("Connected to game server.");
-            System.out.println("Waiting for server to send update to load game...");
-
-            GameLoop loop = new GameLoop(ws, gameUI, auth.authToken(), gameData.gameID());
-            loop.start();
-
-//            ChessGame localGame = new ChessGame();
-//            GameUI gameUI = new GameUI(localGame,
-//                    color.equals("WHITE") ? GameUI.Perspective.WHITE : GameUI.Perspective.BLACK);
-//            gameUI.drawInitialBoard();
+            launchGameLoop(gameData, color);
 
         } catch (NumberFormatException e) {
             System.out.println("Invalid number format.");
@@ -194,16 +174,34 @@ public class PostloginUI {
             }
 
             var gameData = lastListedGames.get(choice - 1);
-            System.out.println("Observing game '" + gameData.gameName() + "'.");
+            String playerColor = null; // null indicates observer
 
-            ChessGame localGame = new ChessGame();
-            GameUI gameUI = new GameUI(localGame, GameUI.Perspective.WHITE); // observers always see from white's perspective
-            gameUI.drawInitialBoard();
+
+            System.out.println("Observing game '" + gameData.gameName() + "'.");
+            launchGameLoop(gameData, playerColor);
 
         } catch (NumberFormatException e) {
             System.out.println("Invalid number format.");
         } catch (Exception e) {
             System.out.println("Error observing game: " + e.getMessage());
         }
+    }
+
+    private void launchGameLoop(GameData gameData, String playerColor) throws Exception {
+        GameUI.Perspective perspective;
+        if ("BLACK".equalsIgnoreCase(playerColor)) {
+            perspective = GameUI.Perspective.BLACK;
+        } else {
+            perspective = GameUI.Perspective.WHITE;
+        }
+
+        GameUI gameUI = new GameUI(null, perspective);
+
+        Websocket ws = new Websocket(gameUI);
+        ws.connect(auth.authToken(), gameData.gameID());
+        System.out.println("Connected to game server. Waiting for server to send update to load game...");
+
+        GameLoop loop = new GameLoop(ws, gameUI, auth.authToken(), gameData.gameID(), playerColor);
+        loop.start();
     }
 }
