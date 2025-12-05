@@ -2,30 +2,32 @@ package ui;
 
 import chess.*;
 
+import java.util.Collection;
+
 public class BoardUI {
 
     public enum Perspective { WHITE, BLACK }
 
-    public static void printBoard(ChessGame game, Perspective perspective) {
+    public static void printBoard(ChessGame game, Perspective perspective, Collection<ChessPosition> highlightedPositions) {
         var board = game.getBoard();
         System.out.println();
 
         if (perspective == Perspective.WHITE) {
-            drawWhitePerspective(board);
+            drawWhitePerspective(board, highlightedPositions);
         } else {
-            drawBlackPerspective(board);
+            drawBlackPerspective(board, highlightedPositions);
         }
     }
 
     // ---------------- WHITE VIEW ----------------
-    private static void drawWhitePerspective(ChessBoard board) {
+    private static void drawWhitePerspective(ChessBoard board, Collection<ChessPosition> highlightedPositions) {
         printColumnLabelsWhite();
 
         for (int row = 8; row >= 1; row--) {
             printRowNumber(row);
 
             for (int col = 1; col <= 8; col++) {
-                printSquare(board, row, col);
+                printSquare(board, row, col, highlightedPositions);
             }
 
             printRowNumber(row);
@@ -36,14 +38,14 @@ public class BoardUI {
     }
 
     // ---------------- BLACK VIEW ----------------
-    private static void drawBlackPerspective(ChessBoard board) {
+    private static void drawBlackPerspective(ChessBoard board, Collection<ChessPosition> highlightedPositions) {
         printColumnLabelsBlack();
 
         for (int row = 1; row <= 8; row++) {
             printRowNumber(row);
 
             for (int col = 8; col >= 1; col--) {
-                printSquare(board, row, col);
+                printSquare(board, row, col, highlightedPositions);
             }
 
             printRowNumber(row);
@@ -55,11 +57,16 @@ public class BoardUI {
 
     // ---------------- UTILS ----------------
 
-    private static void printSquare(ChessBoard board, int row, int col) {
+    private static void printSquare(ChessBoard board, int row, int col, Collection<ChessPosition> highlightedPositions) {
         var piece = board.getPiece(new ChessPosition(row, col));
+        ChessPosition currentPosition = new ChessPosition(row, col);
 
         boolean lightSquare = ((row + col) % 2 == 0);
         String bg = lightSquare ? EscapeSequences.LIGHT_BG : EscapeSequences.DARK_BG;
+
+        if (highlightedPositions != null && highlightedPositions.contains(currentPosition)) {
+            bg = lightSquare ? EscapeSequences.HIGHLIGHT_LIGHT_BG : EscapeSequences.HIGHLIGHT_DARK_BG;
+        }
 
         System.out.print(bg);
 

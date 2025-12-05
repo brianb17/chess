@@ -56,4 +56,33 @@ public class MoveReader {
 
         return new ChessPosition(rank, file - 'a' + 1);
     }
+
+    public ChessPosition readPosition(String prompt) {
+        System.out.print(prompt + " ");
+        String input = scanner.nextLine().trim().toLowerCase();
+
+        if (input.length() != 2) {
+            System.out.println("Invalid position format. Must be two characters (e.g., 'e2').");
+            return null;
+        }
+
+        char file = input.charAt(0);
+        char rank = input.charAt(1);
+        if (file < 'a' || file > 'h') {
+            System.out.println("Invalid position: File must be between a and h.");
+            return null;
+        }
+        if (rank < '1' || rank > '8') {
+            System.out.println("Invalid position: Rank must be between 1 and 8.");
+            return null;
+        }
+
+
+        try {
+            return parsePosition(input);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid coordinate: " + e.getMessage());
+            return null;
+        }
+    }
 }

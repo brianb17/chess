@@ -31,6 +31,8 @@ public class EscapeSequences {
 
     private static final String SET_TEXT_COLOR = UNICODE_ESCAPE + "[38;5;";
     private static final String SET_BG_COLOR = UNICODE_ESCAPE + "[48;5;";
+    public static final String HIGHLIGHT_LIGHT_BG = "\u001b[48;5;184m";
+    public static final String HIGHLIGHT_DARK_BG = "\u001b[48;5;178m";
 
     public static final String SET_TEXT_COLOR_BLACK = SET_TEXT_COLOR + "0m";
     public static final String SET_TEXT_COLOR_LIGHT_GREY = SET_TEXT_COLOR + "242m";

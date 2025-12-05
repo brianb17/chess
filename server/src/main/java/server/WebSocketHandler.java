@@ -292,7 +292,7 @@ public class WebSocketHandler {
 
             JsonObject loadGame = new JsonObject();
             loadGame.addProperty("serverMessageType", "LOAD_GAME");
-            loadGame.add("game", gson.toJsonTree(updatedGameData));
+            loadGame.add("game", gson.toJsonTree(updatedGameData.game()));
 
             JsonObject notif = new JsonObject();
             notif.addProperty("serverMessageType", "NOTIFICATION");

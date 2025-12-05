@@ -1,8 +1,10 @@
 package ui;
 
 import chess.ChessMove;
+import chess.ChessPosition;
 import client.Websocket;
 
+import java.util.Collection;
 import java.util.Scanner;
 
 public class GameLoop {
@@ -61,7 +63,30 @@ public class GameLoop {
                         ws.sendMove(authToken, gameID, move);
                     }
                 }
-                case "highlight" -> System.out.println("Highlighting not implemented in console.");
+                case "highlight" -> {
+                    MoveReader moveReader = new MoveReader(scanner);
+                    ChessPosition startPosition = moveReader.readPosition("Enter piece position (e.g., e2):");
+
+                    if (startPosition != null) {
+                        gameUI.clearHighlights();
+                        Collection<ChessMove> moves = gameUI.getGame().validMoves(startPosition);
+
+                        if (moves == null || moves.isEmpty()) {
+                            System.out.println("No legal moves for the piece at " + startPosition.toString());
+                            break;
+                        }
+
+                        Collection<ChessPosition> positionsToHighlight = new java.util.HashSet<>();
+                        positionsToHighlight.add(startPosition);
+
+                        for (ChessMove move : moves) {
+                            positionsToHighlight.add(move.getEndPosition());
+                        }
+
+                        gameUI.setHighlightedMoves(positionsToHighlight);
+                        gameUI.drawBoard();
+                    }
+                }
                 default -> System.out.println("Unknown command. Type 'help' for a list of commands.");
             }
         }
@@ -77,7 +102,7 @@ public class GameLoop {
                 move       - Make a move
                 resign     - Resign the game
                 leave      - Leave the game
-                highlight  - Highlight legal moves for a piece (not implemented)
+                highlight  - Highlight legal moves for a piece
                 """);
     }
 }
