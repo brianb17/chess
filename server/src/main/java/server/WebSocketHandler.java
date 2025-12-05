@@ -324,7 +324,9 @@ public class WebSocketHandler {
                 Integer otherGameID = sessionToGame.get(sessionCtx.sessionId());
                 if (otherGameID != null && otherGameID.equals(gameID)) {
                     sessionCtx.send(gson.toJson(loadGame));
-                    sessionCtx.send(gson.toJson(notif));
+                    if (!sessionCtx.sessionId().equals(ctx.sessionId())) {
+                        sessionCtx.send(gson.toJson(notif));
+                    }
                 }
             }
 

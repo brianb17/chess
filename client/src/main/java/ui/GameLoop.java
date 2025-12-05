@@ -56,13 +56,20 @@ public class GameLoop {
                 case "resign", "move", "highlight" -> {
                     if (playerColor == null) {
                         System.out.println("Observers can't use this command.");
+                        break;
                     }
 
                     switch (input) {
                         case "resign" -> {
-                            ws.sendResign(authToken, gameID);
-                            running[0] = false;
-                            heartbeat.interrupt();
+                            System.out.print("Are you sure you want to resign? (yes/no): ");
+                            String confirmation = scanner.nextLine().trim().toLowerCase();
+
+                            if (confirmation.equals("yes")) {
+                                ws.sendResign(authToken, gameID);
+                                System.out.println("You have resigned the game.");
+                            } else {
+                                System.out.println("Resignation canceled.");
+                            }
                         }
                         case "move" -> {
                             MoveReader moveReader = new MoveReader(scanner);
