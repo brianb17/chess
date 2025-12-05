@@ -61,8 +61,6 @@ public class BoardUI {
         boolean lightSquare = ((row + col) % 2 == 0);
         String bg = lightSquare ? EscapeSequences.LIGHT_BG : EscapeSequences.DARK_BG;
 
-        String textColor = lightSquare ? EscapeSequences.BLACK_PIECE : EscapeSequences.WHITE_PIECE;
-
         System.out.print(bg);
 
         if (piece == null) {

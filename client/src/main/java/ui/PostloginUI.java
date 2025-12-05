@@ -136,7 +136,16 @@ public class PostloginUI {
             var gameData = lastListedGames.get(choice - 1);
 
             System.out.print("Enter color to play (WHITE or BLACK): ");
-            String color = scanner.nextLine().trim().toUpperCase();
+            String color = "";
+            String expectedColor = scanner.nextLine().trim().toUpperCase();
+            if (expectedColor.equalsIgnoreCase("WHITE")) {
+                color = "WHITE";
+            } else if (expectedColor.equalsIgnoreCase("BLACK")) {
+                color = "BLACK";
+            } else {
+                //
+            }
+
             facade.joinGame(auth.authToken(), gameData.gameID(), color);
             System.out.println("Joined game '" + gameData.gameName() + "' as " + color + ".");
 

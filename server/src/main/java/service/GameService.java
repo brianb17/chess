@@ -57,6 +57,7 @@ public class GameService {
             throw new IllegalArgumentException("Error: unauthorized");
         }
 
+        String joiningUsername = auth.username();
         String color = request.playerColor();
         if (!"WHITE".equalsIgnoreCase(color) && !"BLACK".equalsIgnoreCase(color)) {
             throw new IllegalArgumentException("Error: bad request");
@@ -65,14 +66,17 @@ public class GameService {
         GameData game = dataAccess.getGame(request.gameID());
         if (game == null) {
             throw new IllegalArgumentException("Error: bad request");
-
         }
 
-        if ("WHITE".equalsIgnoreCase(color) && game.whiteUsername() != null) {
+        if ("WHITE".equalsIgnoreCase(color) &&
+                game.whiteUsername() != null &&
+                !game.whiteUsername().equalsIgnoreCase(joiningUsername)) {
             throw new IllegalStateException("Error: already taken");
         }
 
-        if ("BLACK".equalsIgnoreCase(color) && game.blackUsername() != null) {
+        if ("BLACK".equalsIgnoreCase(color) &&
+                game.blackUsername() != null &&
+                !game.blackUsername().equalsIgnoreCase(joiningUsername)) {
             throw new IllegalStateException("Error: already taken");
         }
 
@@ -85,7 +89,7 @@ public class GameService {
                     game.game()
             );
         }
-        else {
+        else if ("BLACK".equalsIgnoreCase(color)) {
             game = new GameData(
                     game.gameID(),
                     game.whiteUsername(),

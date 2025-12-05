@@ -95,12 +95,17 @@ class GameServiceTest {
     @Test
     void joinGameTakenFails() throws Exception {
         int gameID = gameService.createGame(authToken, "Game 1");
-
         JoinGameRequest whiteRequest = new JoinGameRequest(gameID, "WHITE");
         gameService.joinGame(authToken, whiteRequest);
 
+        UserData user2 = new UserData("alice", "alice@example.com", "pw");
+        AuthData auth2 = userService.register(user2);
+        String aliceAuthToken = auth2.authToken();
+
+        JoinGameRequest aliceJoinsWhite = new JoinGameRequest(gameID, "WHITE");
+
         Exception exception = assertThrows(IllegalStateException.class, () -> {
-            gameService.joinGame(authToken, whiteRequest);
+            gameService.joinGame(aliceAuthToken, aliceJoinsWhite);
         });
         assertTrue(exception.getMessage().contains("already taken"));
     }

@@ -200,43 +200,36 @@ public class WebSocketHandler {
                 return;
             }
 
-            String color = null;
-            if (game.whiteUsername() == null) {
-                color = "WHITE";
-            } else if (game.blackUsername() == null) {
-                color = "BLACK";
+            // No auto-join here. Determine what role this connection already has (if any)
+            String joiningAs;
+            if (username.equals(game.whiteUsername())) {
+                joiningAs = "WHITE";
+            } else if (username.equals(game.blackUsername())) {
+                joiningAs = "BLACK";
+            } else {
+                joiningAs = "SPECTATOR";
             }
 
-            if (color != null) {
-                try {
-                    JoinGameRequest request = new JoinGameRequest(gameID, color);
-                    gameService.joinGame(authToken, request);
-                } catch (IllegalArgumentException | IllegalStateException e) {
-                    System.out.println("Join failed: " + e.getMessage());
-                    sendError(ctx, "Error: " + e.getMessage());
-                    return;
-                }
-            }
-
-            // Send the updated game to the connecting user
+            // Send the current game state to the connecting user
             GameData updatedGame = gameService.getGameById(gameID);
             JsonObject loadGame = new JsonObject();
             loadGame.addProperty("serverMessageType", "LOAD_GAME");
             loadGame.add("game", gson.toJsonTree(updatedGame));
             ctx.send(gson.toJson(loadGame));
 
+            // Track which game this websocket session is watching
             sessionToGame.put(ctx.sessionId(), gameID);
 
-            // Notify other sessions
+            // Notify other sessions in the same game that someone joined (as spectator or as a player if they were already assigned)
             for (WsConnectContext otherCtx : sessions.values()) {
-                if (!otherCtx.sessionId().equals(ctx.sessionId()) &&
-                        gameID == sessionToGame.get(otherCtx.sessionId())) { // only same game
-                    JsonObject notif = new JsonObject();
-                    notif.addProperty("serverMessageType", "NOTIFICATION");
-
-                    String joiningAs = (color == null) ? "SPECTATOR" : color;
-                    notif.addProperty("message", username + " joined the game as " + joiningAs);
-                    otherCtx.send(gson.toJson(notif));
+                if (!otherCtx.sessionId().equals(ctx.sessionId())) {
+                    Integer otherGameID = sessionToGame.get(otherCtx.sessionId());
+                    if (otherGameID != null && otherGameID.equals(gameID)) {
+                        JsonObject notif = new JsonObject();
+                        notif.addProperty("serverMessageType", "NOTIFICATION");
+                        notif.addProperty("message", username + " joined the game as " + joiningAs);
+                        otherCtx.send(gson.toJson(notif));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -244,6 +237,7 @@ public class WebSocketHandler {
             sendError(ctx, "Error processing CONNECT command: " + e.getMessage());
         }
     }
+
 
 
 
