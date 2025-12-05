@@ -35,17 +35,35 @@ public class GameUI {
     }
 
     public void drawBoard() {
+        printBoardOnly();
+        System.out.println();
+        System.out.print("Enter a command: ");
+    }
+
+    public void drawInitialBoard() {
+        drawBoard();
+    }
+
+    public void redrawBAP() {
+        this.clearHighlights();
+        this.drawBoard();
+        System.out.println();
+        System.out.print("Enter a Command ");
+    }
+
+    private void printBoardOnly() {
         if (perspective == Perspective.WHITE) {
             BoardUI.printBoard(game, BoardUI.Perspective.WHITE, highlightedMoves);
         } else {
             BoardUI.printBoard(game, BoardUI.Perspective.BLACK, highlightedMoves);
         }
-        System.out.println();
-        System.out.print("Enter a Command:");
     }
 
-    public void drawInitialBoard() {
-        drawBoard();
+    public void printNotification(String message) {
+        System.out.println();
+        System.out.println("Notification: " + message);
+        System.out.println();
+        System.out.print("Enter a command: ");
     }
 
     public void updateBoard(ChessGame updatedGame) {
@@ -53,10 +71,10 @@ public class GameUI {
             System.out.println("ERROR: Received null game state from server.");
             return;
         }
-
         this.game = updatedGame;
-
-        drawBoard();
+        printBoardOnly();
+        System.out.println();
+        System.out.print("Enter a command: ");
     }
 
 

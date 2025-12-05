@@ -39,15 +39,16 @@ public class Websocket {
         switch (base.getServerMessageType()) {
             case LOAD_GAME -> {
                 LoadGameMessage msg = gson.fromJson(json, LoadGameMessage.class);
-                ((GameUI) ui).updateBoard(msg.getGame());
-            }
+                GameUI gameUI = (GameUI) ui;
+                gameUI.updateBoard(msg.getGame());}
             case ERROR -> {
                 ErrorMessage msg = gson.fromJson(json, ErrorMessage.class);
                 System.out.println("Server error: " + msg.getMessage());
             }
             case NOTIFICATION -> {
                 NotificationMessage msg = gson.fromJson(json, NotificationMessage.class);
-                System.out.println("Notification: " + msg.getMessage());
+                GameUI gameUI = (GameUI) ui;
+                gameUI.printNotification(msg.getMessage());
             }
 
         }

@@ -35,7 +35,7 @@ public class MySqlDataAccess implements DataAccess {
                         whiteUsername VARCHAR(255),
                         blackUsername VARCHAR(255),
                         gameName VARCHAR(255),
-                        chessGame TEXT NOT NULL,
+                        chessGame LONGTEXT NOT NULL,
                         PRIMARY KEY (gameID)
         );
     """;
