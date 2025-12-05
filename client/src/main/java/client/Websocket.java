@@ -118,8 +118,4 @@ public class Websocket {
         System.out.println("WebSocket closed: " + reason);
     }
 
-    @OnError
-    public void onError(Session session, Throwable error) {
-        System.out.println("WebSocket error: " + error.getMessage());
-    }
 }

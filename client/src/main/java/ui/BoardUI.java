@@ -99,29 +99,21 @@ public class BoardUI {
 
 
     private static void printColumnLabelsWhite() {
-        System.out.print("   ");
-        boolean bigPrint = true;
-        int counter = 0;
-        for (char c = 'a'; c <= 'h'; c++) {
-            if (bigPrint) {
-                System.out.print(" " + c + "  ");
-            } else {
-                System.out.print(" " + c + " ");
-            }
-            bigPrint = !bigPrint;
-            counter++;
-            if (counter == 4) {
-                System.out.print(" ");
-            }
-        }
-        System.out.println();
+        char[] whiteOrder = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
+        printColumnLabels(whiteOrder);
     }
 
     private static void printColumnLabelsBlack() {
+        char[] blackOrder = {'h', 'g', 'f', 'e', 'd', 'c', 'b', 'a'};
+        printColumnLabels(blackOrder);
+    }
+
+    private static void printColumnLabels(char[] columnOrder) {
         System.out.print("   ");
         boolean bigPrint = true;
         int counter = 0;
-        for (char c = 'h'; c >= 'a'; c--) {
+
+        for (char c : columnOrder) {
             if (bigPrint) {
                 System.out.print(" " + c + "  ");
             } else {

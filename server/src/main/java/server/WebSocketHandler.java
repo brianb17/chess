@@ -8,7 +8,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccessException;
 import datamodel.GameData;
-import datamodel.JoinGameRequest;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
@@ -22,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler {
     private static final Map<String, WsConnectContext> sessions = new ConcurrentHashMap<>();
-    private static final Gson gson = new Gson();
-    private static final Map<String, Integer> sessionToGame = new ConcurrentHashMap<>();
+    private static final Gson GSON = new Gson();
+    private static final Map<String, Integer> SESSION_TO_GAME = new ConcurrentHashMap<>();
 
     public UserService userService;
     public GameService gameService;
@@ -43,21 +42,21 @@ public class WebSocketHandler {
         System.out.println("Websocket message received: " + msg);
 
         try {
-            JsonObject json = gson.fromJson(msg, JsonObject.class);
+            JsonObject json = GSON.fromJson(msg, JsonObject.class);
             String commandType = json.get("commandType").getAsString();
 
             switch (commandType) {
                 case "CONNECT" -> handleConnect(ctx, json);
                 case "MAKE_MOVE" -> {
-                    MakeMoveCommand cmd = gson.fromJson(msg, MakeMoveCommand.class);
+                    MakeMoveCommand cmd = GSON.fromJson(msg, MakeMoveCommand.class);
                     handleMakeMove(ctx, cmd);
                 }
                 case "RESIGN" -> {
-                    UserGameCommand cmd = gson.fromJson(msg, UserGameCommand.class);
+                    UserGameCommand cmd = GSON.fromJson(msg, UserGameCommand.class);
                     handleResign(ctx, cmd);
                 }
                 case "LEAVE" -> {
-                    UserGameCommand cmd = gson.fromJson(msg, UserGameCommand.class);
+                    UserGameCommand cmd = GSON.fromJson(msg, UserGameCommand.class);
                     handleLeave(ctx, cmd);
                     break;
                 }
@@ -127,15 +126,15 @@ public class WebSocketHandler {
         notif.addProperty("serverMessageType", "NOTIFICATION");
         notif.addProperty("message", username + " left the game");
 
-        Integer leavingGameID = sessionToGame.get(ctx.sessionId());
-        sessionToGame.remove(ctx.sessionId());
+        Integer leavingGameID = SESSION_TO_GAME.get(ctx.sessionId());
+        SESSION_TO_GAME.remove(ctx.sessionId());
 
         for (WsConnectContext otherCtx : sessions.values()) {
-            Integer otherGameID = sessionToGame.get(otherCtx.sessionId());
+            Integer otherGameID = SESSION_TO_GAME.get(otherCtx.sessionId());
             if (!otherCtx.sessionId().equals(ctx.sessionId()) &&
                     leavingGameID != null &&
                     leavingGameID.equals(otherGameID)) {
-                otherCtx.send(gson.toJson(notif));
+                otherCtx.send(GSON.toJson(notif));
             }
         }
 
@@ -194,9 +193,9 @@ public class WebSocketHandler {
         notif.addProperty("message", username + " resigned. " + winner + " wins!");
 
         for (WsConnectContext sessionCtx : sessions.values()) {
-            Integer otherGameID = sessionToGame.get(sessionCtx.sessionId());
+            Integer otherGameID = SESSION_TO_GAME.get(sessionCtx.sessionId());
             if (otherGameID != null && otherGameID.equals(gameID)) {
-                sessionCtx.send(gson.toJson(notif));
+                sessionCtx.send(GSON.toJson(notif));
             }
         }
     }
@@ -234,21 +233,21 @@ public class WebSocketHandler {
             GameData updatedGame = gameService.getGameById(gameID);
             JsonObject loadGame = new JsonObject();
             loadGame.addProperty("serverMessageType", "LOAD_GAME");
-            loadGame.add("game", gson.toJsonTree(updatedGame));
-            ctx.send(gson.toJson(loadGame));
+            loadGame.add("game", GSON.toJsonTree(updatedGame));
+            ctx.send(GSON.toJson(loadGame));
 
             // Track which game this websocket session is watching
-            sessionToGame.put(ctx.sessionId(), gameID);
+            SESSION_TO_GAME.put(ctx.sessionId(), gameID);
 
             // Notify other sessions in the same game that someone joined (as spectator or as a player if they were already assigned)
             for (WsConnectContext otherCtx : sessions.values()) {
                 if (!otherCtx.sessionId().equals(ctx.sessionId())) {
-                    Integer otherGameID = sessionToGame.get(otherCtx.sessionId());
+                    Integer otherGameID = SESSION_TO_GAME.get(otherCtx.sessionId());
                     if (otherGameID != null && otherGameID.equals(gameID)) {
                         JsonObject notif = new JsonObject();
                         notif.addProperty("serverMessageType", "NOTIFICATION");
                         notif.addProperty("message", username + " joined the game as " + joiningAs);
-                        otherCtx.send(gson.toJson(notif));
+                        otherCtx.send(GSON.toJson(notif));
                     }
                 }
             }
@@ -313,7 +312,7 @@ public class WebSocketHandler {
 
             JsonObject loadGame = new JsonObject();
             loadGame.addProperty("serverMessageType", "LOAD_GAME");
-            loadGame.add("game", gson.toJsonTree(updatedGameData.game()));
+            loadGame.add("game", GSON.toJsonTree(updatedGameData.game()));
 
             String baseMessage = String.format("%s played %s", username, moveDescription);
             String messageSuffix = "";
@@ -344,11 +343,11 @@ public class WebSocketHandler {
             notif.addProperty("message", baseMessage + messageSuffix);
 
             for (WsConnectContext sessionCtx : sessions.values()) {
-                Integer otherGameID = sessionToGame.get(sessionCtx.sessionId());
+                Integer otherGameID = SESSION_TO_GAME.get(sessionCtx.sessionId());
                 if (otherGameID != null && otherGameID.equals(gameID)) {
-                    sessionCtx.send(gson.toJson(loadGame));
+                    sessionCtx.send(GSON.toJson(loadGame));
                     if (!sessionCtx.sessionId().equals(ctx.sessionId())) {
-                        sessionCtx.send(gson.toJson(notif));
+                        sessionCtx.send(GSON.toJson(notif));
                     }
                 }
             }
@@ -365,13 +364,13 @@ public class WebSocketHandler {
         JsonObject error = new JsonObject();
         error.addProperty("serverMessageType", "ERROR");
         error.addProperty("errorMessage", message);
-        ctx.send(gson.toJson(error));
+        ctx.send(GSON.toJson(error));
     }
 
     public void onClose(WsCloseContext ctx) {
         String sessionId = ctx.sessionId();
         sessions.remove(sessionId);
-        sessionToGame.remove(sessionId);
+        SESSION_TO_GAME.remove(sessionId);
         System.out.println("WebSocket closed: " + sessionId);
     }
 

@@ -49,7 +49,9 @@ public class MoveReader {
     }
 
     private ChessPosition parsePosition(String pos) {
-        if (pos.length() != 2) throw new IllegalArgumentException("Position must be 2 characters.");
+        if (pos.length() != 2) {
+            throw new IllegalArgumentException("Position must be 2 characters.");
+        }
 
         char file = pos.charAt(0); // a-h
         int rank = Character.getNumericValue(pos.charAt(1)); // 1-8

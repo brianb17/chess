@@ -45,74 +45,19 @@ public class GameLoop {
             String input = scanner.nextLine().trim().toLowerCase();
 
             switch (input) {
-                case "help" -> {
-                    printHelp();
-                }
-                case "redraw" -> {
-                    gameUI.clearHighlights();
-                    gameUI.drawBoard();
-                }
-                case "highlight" -> {
-                    MoveReader moveReader = new MoveReader(scanner);
-                    ChessPosition startPosition = moveReader.readPosition("Enter piece position (e.g., e2):");
-
-                    if (startPosition != null) {
-                        gameUI.clearHighlights();
-                        Collection<ChessMove> moves = gameUI.getGame().validMoves(startPosition);
-
-                        if (moves == null || moves.isEmpty()) {
-                            System.out.println("No legal moves for the piece at " + startPosition.toString());
-                            break;
-                        }
-
-                        Collection<ChessPosition> positionsToHighlight = new java.util.HashSet<>();
-                        positionsToHighlight.add(startPosition);
-
-                        for (ChessMove move : moves) {
-                            positionsToHighlight.add(move.getEndPosition());
-                        }
-
-                        gameUI.setHighlightedMoves(positionsToHighlight);
-                    }
-                    gameUI.drawBoard();
-                }
+                case "help" -> printHelp();
+                case "redraw" -> handleRedraw();
+                case "highlight" -> handleHighlight(scanner);
                 case "leave" -> {
                     ws.sendLeave(authToken, gameID);
                     running[0] = false;
                     heartbeat.interrupt();
                 }
-                case "resign", "move" -> {
-                    if (playerColor == null) {
-                        System.out.println("Observers can't use this command.");
-                        gameUI.drawBoard();
-                        break;
-                    }
-
-                    switch (input) {
-                        case "resign" -> {
-                            System.out.print("Are you sure you want to resign? (yes/no): ");
-                            String confirmation = scanner.nextLine().trim().toLowerCase();
-
-                            if (confirmation.equals("yes")) {
-                                ws.sendResign(authToken, gameID);
-                                System.out.println("You have resigned the game.");
-                            } else {
-                                System.out.println("Resignation canceled.");
-                            }
-                        }
-                        case "move" -> {
-                            MoveReader moveReader = new MoveReader(scanner);
-                            ChessMove move = moveReader.readMove();
-                            if (move != null) {
-                                gameUI.clearHighlights();
-                                ws.sendMove(authToken, gameID, move);
-                            }
-                        }
-                    }
-                }
+                case "resign" -> handleResign(scanner);
+                case "move" -> handleMove(scanner);
                 default -> {
                     System.out.println("Unknown command. Type 'help' for a list of commands.");
-                    System.out.println("Enter a command: ");
+                    gameUI.drawBoard();
                 }
             }
         }
@@ -130,6 +75,71 @@ public class GameLoop {
         if (playerColor != null) {
             System.out.println("  move       - Make a move");
             System.out.println("  resign     - Resign the game");
+        }
+    }
+
+    private void handleRedraw() {
+        gameUI.clearHighlights();
+        gameUI.drawBoard();
+    }
+
+    private void handleHighlight(Scanner scanner) {
+        MoveReader moveReader = new MoveReader(scanner);
+        ChessPosition startPosition = moveReader.readPosition("Enter piece position (e.g., e2):");
+
+        if (startPosition != null) {
+            gameUI.clearHighlights();
+            Collection<ChessMove> moves = gameUI.getGame().validMoves(startPosition);
+
+            if (moves == null || moves.isEmpty()) {
+                System.out.println("No legal moves for the piece at " + startPosition.toString());
+            } else {
+                Collection<ChessPosition> positionsToHighlight = new java.util.HashSet<>();
+                positionsToHighlight.add(startPosition);
+
+                for (ChessMove move : moves) {
+                    positionsToHighlight.add(move.getEndPosition());
+                }
+
+                gameUI.setHighlightedMoves(positionsToHighlight);
+            }
+        }
+        gameUI.drawBoard();
+    }
+
+    private void handleResign(Scanner scanner) {
+        if (playerColor == null) {
+            System.out.println("Observers can't use this command.");
+            gameUI.drawBoard();
+            return;
+        }
+
+        System.out.print("Are you sure you want to resign? (yes/no): ");
+        String confirmation = scanner.nextLine().trim().toLowerCase();
+
+        if (confirmation.equals("yes")) {
+            ws.sendResign(authToken, gameID);
+            System.out.println("You have resigned the game.");
+        } else {
+            System.out.println("Resignation canceled.");
+            gameUI.drawBoard();
+        }
+    }
+
+    private void handleMove(Scanner scanner) {
+        if (playerColor == null) {
+            System.out.println("Observers can't use this command.");
+            gameUI.drawBoard();
+            return;
+        }
+
+        MoveReader moveReader = new MoveReader(scanner);
+        ChessMove move = moveReader.readMove();
+        if (move != null) {
+            gameUI.clearHighlights();
+            ws.sendMove(authToken, gameID, move);
+        } else {
+            gameUI.drawBoard();
         }
     }
 }
