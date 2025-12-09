@@ -13,8 +13,8 @@ public class EscapeSequences {
 
     public static final String RESET = "\u001B[0m";
 
-    public static final String LIGHT_BG = "\u001B[48;5;223m";
-    public static final String DARK_BG  ="\u001B[48;5;130m";
+    public static final String DARK_BG = "\u001B[48;5;223m";
+    public static final String LIGHT_BG  ="\u001B[48;5;130m";
 
     public static final String WHITE_PIECE = "\u001B[97m"; // bright white text
     public static final String BLACK_PIECE = "\u001B[30m"; // black text

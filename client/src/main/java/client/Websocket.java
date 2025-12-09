@@ -43,7 +43,7 @@ public class Websocket {
                 gameUI.updateBoard(msg.getGame());}
             case ERROR -> {
                 ErrorMessage msg = gson.fromJson(json, ErrorMessage.class);
-                System.out.println("Server error: " + msg.getMessage());
+                System.out.println(msg.getErrorMessage());
             }
             case NOTIFICATION -> {
                 NotificationMessage msg = gson.fromJson(json, NotificationMessage.class);
@@ -115,7 +115,8 @@ public class Websocket {
 
     @OnClose
     public void onClose(Session session, CloseReason reason) {
-        System.out.println("WebSocket closed: " + reason);
+        System.out.println();
+        System.out.println("PostLogin> ");
     }
 
 }

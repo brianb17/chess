@@ -73,7 +73,7 @@ public class PreloginUI {
             postlogin.run();
 
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println(e.getMessage());
         }
     }
 
@@ -92,7 +92,9 @@ public class PreloginUI {
             postlogin.run();
 
         } catch (Exception e) {
-            System.out.println("Login failed: " + e.getMessage());
+            // e.getMessage() is now "Error: unauthorized"
+            System.out.println("Login " + e.getMessage());
+            // Output: Login failed: Error: unauthorized
         }
     }
 }

@@ -12,11 +12,19 @@ public class ServerFacade {
     private final String baseUrl;
     private final Gson gson = new Gson();
 
+    // Private class to correctly parse the server's JSON error body: {"message":"..."}
+    private static class ServerErrorResponse {
+        private String message;
+        public String getMessage() {
+            return message;
+        }
+    }
+
     public ServerFacade(int port) {
         this.baseUrl = "http://localhost:" + port;
     }
 
-    //PreLogin
+    // --- PreLogin ---
 
     public void clear() throws Exception {
         sendDelete("/db", null);
@@ -38,7 +46,7 @@ public class ServerFacade {
         return gson.fromJson(jsonResp, AuthData.class);
     }
 
-    // PostLogin
+    // --- PostLogin ---
 
     public void logout(String authToken) throws Exception {
         sendDelete("/session", authToken);
@@ -48,8 +56,9 @@ public class ServerFacade {
         String jsonReq = gson.toJson(Map.of("gameName", gameName));
         String jsonResp = sendPost("/game", jsonReq, authToken);
 
+        // Gson parses numbers as Double, so we cast to Double then get int value
         Map<?, ?> map = gson.fromJson(jsonResp, Map.class);
-        return ((Double) map.get("gameID")).intValue(); // Gson parses numbers as Double
+        return ((Double) map.get("gameID")).intValue();
     }
 
     public ListGamesResult listGames(String authToken) throws Exception {
@@ -63,7 +72,7 @@ public class ServerFacade {
         sendPut("/game", jsonReq, authToken);
     }
 
-    // HTTP Helpers
+    // --- HTTP Helpers ---
 
     private String sendGet(String path, String authToken) throws Exception {
         URL url = new URL(baseUrl + path);
@@ -123,18 +132,30 @@ public class ServerFacade {
 
     private String getResponse(HttpURLConnection conn) throws Exception {
         int code = conn.getResponseCode();
+        // Determine whether to read from the input stream (2xx success) or error stream (4xx/5xx error)
         InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {
                 sb.append(line);
             }
+            String responseBody = sb.toString();
+
             if (code >= 200 && code < 300) {
-                return sb.toString();
-            }
-            else {
-                throw new Exception("Server returned error: " + sb.toString());
+                return responseBody;
+            } else {
+                // FIX: Parse the JSON error body and throw an exception with ONLY the message.
+                if (!responseBody.isEmpty()) {
+                    ServerErrorResponse error = gson.fromJson(responseBody, ServerErrorResponse.class);
+
+                    // Throw an exception containing ONLY the clean message (e.g., "Error: unauthorized")
+                    throw new Exception(error.getMessage());
+                } else {
+                    // Handle cases where server returns an error status with an empty body
+                    throw new Exception("Server returned HTTP " + code);
+                }
             }
         }
     }

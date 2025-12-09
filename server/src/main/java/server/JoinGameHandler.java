@@ -21,6 +21,7 @@ public class JoinGameHandler {
         try {
             String authToken = ctx.header("authorization");
             if (authToken == null || authToken.isEmpty()) {
+                // Correct 401 response: JSON structure required
                 ctx.status(401).json("{\"message\": \"Error: unauthorized\"}");
                 return;
             }
@@ -28,25 +29,39 @@ public class JoinGameHandler {
             JoinGameRequest request = gson.fromJson(ctx.body(), JoinGameRequest.class);
             gameService.joinGame(authToken, request);
 
-
+            // Success case
             ctx.status(200).json("{}");
         }
-        catch (IllegalArgumentException e) {
-            String msg = e.getMessage();
+        catch (DataAccessException e) {
+            String msg = e.getMessage().toLowerCase();
+            String responseMessage;
+            int status = 500;
+
+            // Map the DataAccessException messages to specific HTTP status codes and EXACT JSON bodies
             if (msg.contains("unauthorized")) {
-                ctx.status(401).json("{\"message\": \"" + msg + "\"}");
+                status = 401;
+                responseMessage = "Error: unauthorized";
+            }
+            else if (msg.contains("bad request")) {
+                status = 400;
+                responseMessage = "Error: bad request";
+            }
+            else if (msg.contains("already taken")) {
+                status = 403;
+                responseMessage = "Error: already taken";
             }
             else {
-                ctx.status(400).json("{\"message\": \"" + msg + "\"}");
+                // Catch-all: Must include "Error: " prefix
+                status = 500;
+                responseMessage = "Error: " + e.getMessage();
             }
-        }
-        catch (IllegalStateException e) {
-            ctx.status(403).json("{\"message\": \"" + e.getMessage() + "\"}");
-        }
-        catch (DataAccessException e) {
-            ctx.status(500).json("{\"message\": \"Error: " + e.getMessage() + "\"}");
+
+            // 🛑 FIX: Use the required JSON structure for the response body
+            ctx.status(status).json("{\"message\": \"" + responseMessage + "\"}");
         }
         catch (Exception e) {
+            // Catch all unexpected errors (e.g., Gson parsing failures)
+            // 🛑 FIX: Use the required JSON structure and "Error: " prefix
             ctx.status(500).json("{\"message\": \"Error: " + e.getMessage() + "\"}");
         }
     }

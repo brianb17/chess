@@ -154,7 +154,16 @@ public class PostloginUI {
         } catch (NumberFormatException e) {
             System.out.println("Invalid number format.");
         } catch (Exception e) {
-            System.out.println("Error joining game: " + e.getMessage());
+            // 1. Get the full message (e.g., "Error: already taken")
+            String fullMessage = e.getMessage();
+
+            // 2. Strip the server's required "Error: " prefix
+            String cleanMessage = fullMessage.replaceFirst("^Error: ", "");
+
+            // 3. Print the final message
+            System.out.println(cleanMessage);
+
+            // Output: Error joining game: already taken
         }
     }
 

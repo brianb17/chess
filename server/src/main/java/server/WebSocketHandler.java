@@ -339,16 +339,32 @@ public class WebSocketHandler {
                 gameService.updateGame(updatedGameData);
             }
 
-            JsonObject notif = new JsonObject();
-            notif.addProperty("serverMessageType", "NOTIFICATION");
-            notif.addProperty("message", baseMessage + messageSuffix);
+            JsonObject moveNotif = new JsonObject();
+            moveNotif.addProperty("serverMessageType", "NOTIFICATION");
+            moveNotif.addProperty("message", baseMessage);
+
+            JsonObject outcomeNotif = null;
+            if (!messageSuffix.isEmpty()) {
+                outcomeNotif = new JsonObject();
+                outcomeNotif.addProperty("serverMessageType", "NOTIFICATION");
+                outcomeNotif.addProperty("message", messageSuffix.trim()); // Just the suffix
+            }
 
             for (WsConnectContext sessionCtx : SESSIONS.values()) {
                 Integer otherGameID = SESSION_TO_GAME.get(sessionCtx.sessionId());
+
                 if (otherGameID != null && otherGameID.equals(gameID)) {
+                    // 1. Send LOAD_GAME to EVERYONE
                     sessionCtx.send(GSON.toJson(loadGame));
+
+                    // 2. Send the MOVE NOTIFICATION (to everyone EXCEPT the move-maker)
                     if (!sessionCtx.sessionId().equals(ctx.sessionId())) {
-                        sessionCtx.send(GSON.toJson(notif));
+                        sessionCtx.send(GSON.toJson(moveNotif));
+                    }
+
+                    // 3. Send the OUTCOME NOTIFICATION (to EVERYONE)
+                    if (outcomeNotif != null) {
+                        sessionCtx.send(GSON.toJson(outcomeNotif));
                     }
                 }
             }
@@ -357,7 +373,7 @@ public class WebSocketHandler {
         } catch (InvalidMoveException e) {
             sendError(ctx, "Invalid move: " + e.getMessage());
         } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+            sendError(ctx, "Invalid move: " + e.getMessage());
         }
     }
 
