@@ -154,16 +154,9 @@ public class PostloginUI {
         } catch (NumberFormatException e) {
             System.out.println("Invalid number format.");
         } catch (Exception e) {
-            // 1. Get the full message (e.g., "Error: already taken")
             String fullMessage = e.getMessage();
-
-            // 2. Strip the server's required "Error: " prefix
             String cleanMessage = fullMessage.replaceFirst("^Error: ", "");
-
-            // 3. Print the final message
             System.out.println(cleanMessage);
-
-            // Output: Error joining game: already taken
         }
     }
 
@@ -183,7 +176,7 @@ public class PostloginUI {
             }
 
             var gameData = lastListedGames.get(choice - 1);
-            String playerColor = null; // null indicates observer
+            String playerColor = null;
 
 
             System.out.println("Observing game '" + gameData.gameName() + "'.");

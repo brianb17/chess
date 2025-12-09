@@ -24,40 +24,31 @@ public class MoveReader {
         }
 
         try {
-            // No need to check length here, RegEx already ensured length is 4 or 5
             ChessPosition start = parsePosition(input.substring(0, 2));
             ChessPosition end = parsePosition(input.substring(2, 4));
             ChessPiece.PieceType promotion = null;
 
             if (input.length() == 5) {
-                // Since RegEx ensures the character is q, r, b, or n, the default case is simplified
                 promotion = switch (input.charAt(4)) {
                     case 'q' -> ChessPiece.PieceType.QUEEN;
                     case 'r' -> ChessPiece.PieceType.ROOK;
                     case 'b' -> ChessPiece.PieceType.BISHOP;
                     case 'n' -> ChessPiece.PieceType.KNIGHT;
-                    default -> null; // Should not happen due to RegEx
+                    default -> null;
                 };
             }
 
             return new ChessMove(start, end, promotion);
 
         } catch (IllegalArgumentException e) {
-            // This catch block handles errors from parsePosition if the RegEx failed to catch something (unlikely)
             System.out.println("Invalid move coordinates: " + e.getMessage());
             return null;
         }
     }
 
     private ChessPosition parsePosition(String pos) {
-        // Since we call this only with substrings of length 2, we can assume length is correct.
-        // The characters are also guaranteed to be valid by the RegEx for 'a'-'h' and '1'-'8'.
-
-        char file = pos.charAt(0); // a-h
-        int rank = Character.getNumericValue(pos.charAt(1)); // 1-8
-
-        // We can safely return the position as the RegEx ensures valid input.
-        // Row (rank) is 1-8, Column (file) is 1-8.
+        char file = pos.charAt(0);
+        int rank = Character.getNumericValue(pos.charAt(1));
         return new ChessPosition(rank, file - 'a' + 1);
     }
 
@@ -65,7 +56,6 @@ public class MoveReader {
         System.out.print(prompt + " ");
         String input = scanner.nextLine().trim().toLowerCase();
 
-        // 🛑 FIX 2: Use an explicit RegEx check for the single position reader as well
         if (!input.matches("^[a-h][1-8]$")) {
             System.out.println("Invalid position format. Must be two characters (e.g., 'e2').");
             return null;
@@ -74,7 +64,6 @@ public class MoveReader {
         try {
             return parsePosition(input);
         } catch (IllegalArgumentException e) {
-            // Should be covered by the RegEx check
             System.out.println("Invalid coordinate: " + e.getMessage());
             return null;
         }

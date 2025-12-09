@@ -220,7 +220,6 @@ public class WebSocketHandler {
                 return;
             }
 
-            // No auto-join here. Determine what role this connection already has (if any)
             String joiningAs;
             if (username.equals(game.whiteUsername())) {
                 joiningAs = "WHITE";
@@ -230,17 +229,14 @@ public class WebSocketHandler {
                 joiningAs = "SPECTATOR";
             }
 
-            // Send the current game state to the connecting user
             GameData updatedGame = gameService.getGameById(gameID);
             JsonObject loadGame = new JsonObject();
             loadGame.addProperty("serverMessageType", "LOAD_GAME");
             loadGame.add("game", GSON.toJsonTree(updatedGame));
             ctx.send(GSON.toJson(loadGame));
 
-            // Track which game this websocket session is watching
             SESSION_TO_GAME.put(ctx.sessionId(), gameID);
 
-            // Notify other sessions in the same game that someone joined (as spectator or as a player if they were already assigned)
             for (WsConnectContext otherCtx : SESSIONS.values()) {
                 if (!otherCtx.sessionId().equals(ctx.sessionId())) {
                     Integer otherGameID = SESSION_TO_GAME.get(otherCtx.sessionId());
@@ -327,8 +323,8 @@ public class WebSocketHandler {
                 messageSuffix = String.format(" Game over! %s is in checkmate. %s wins!",
                         oppUsername,
                         username);
-                chess.setGameOver(true); // Ensure the game object reflects game over
-                gameService.updateGame(updatedGameData); // Re-save the game state (for isGameOver)
+                chess.setGameOver(true);
+                gameService.updateGame(updatedGameData);
 
             } else if (chess.isInCheck(oppColor)) {
                 messageSuffix = String.format(" %s is in check!", oppUsername);
@@ -347,22 +343,19 @@ public class WebSocketHandler {
             if (!messageSuffix.isEmpty()) {
                 outcomeNotif = new JsonObject();
                 outcomeNotif.addProperty("serverMessageType", "NOTIFICATION");
-                outcomeNotif.addProperty("message", messageSuffix.trim()); // Just the suffix
+                outcomeNotif.addProperty("message", messageSuffix.trim());
             }
 
             for (WsConnectContext sessionCtx : SESSIONS.values()) {
                 Integer otherGameID = SESSION_TO_GAME.get(sessionCtx.sessionId());
 
                 if (otherGameID != null && otherGameID.equals(gameID)) {
-                    // 1. Send LOAD_GAME to EVERYONE
                     sessionCtx.send(GSON.toJson(loadGame));
 
-                    // 2. Send the MOVE NOTIFICATION (to everyone EXCEPT the move-maker)
                     if (!sessionCtx.sessionId().equals(ctx.sessionId())) {
                         sessionCtx.send(GSON.toJson(moveNotif));
                     }
 
-                    // 3. Send the OUTCOME NOTIFICATION (to EVERYONE)
                     if (outcomeNotif != null) {
                         sessionCtx.send(GSON.toJson(outcomeNotif));
                     }
