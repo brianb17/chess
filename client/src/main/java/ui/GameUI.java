@@ -19,7 +19,7 @@ public class GameUI {
     }
 
     public ChessGame getGame() {
-        return this.game; // Add a getter for the game
+        return this.game;
     }
 
     public Collection<ChessPosition> getHighlightedMoves() {
